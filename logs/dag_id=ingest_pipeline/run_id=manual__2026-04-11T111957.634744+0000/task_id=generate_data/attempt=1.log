@@ -1,0 +1,38 @@
+[2026-04-11T11:19:58.412+0000] {local_task_job_runner.py:120} INFO - ::group::Pre task execution logs
+[2026-04-11T11:19:58.453+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: ingest_pipeline.generate_data manual__2026-04-11T11:19:57.634744+00:00 [queued]>
+[2026-04-11T11:19:58.464+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: ingest_pipeline.generate_data manual__2026-04-11T11:19:57.634744+00:00 [queued]>
+[2026-04-11T11:19:58.466+0000] {taskinstance.py:2306} INFO - Starting attempt 1 of 1
+[2026-04-11T11:19:58.481+0000] {taskinstance.py:2330} INFO - Executing <Task(PythonOperator): generate_data> on 2026-04-11 11:19:57.634744+00:00
+[2026-04-11T11:19:58.489+0000] {standard_task_runner.py:90} INFO - Running: ['***', 'tasks', 'run', 'ingest_pipeline', 'generate_data', 'manual__2026-04-11T11:19:57.634744+00:00', '--job-id', '5', '--raw', '--subdir', 'DAGS_FOLDER/ingest.py', '--cfg-path', '/tmp/tmpdzyyojjl']
+[2026-04-11T11:19:58.492+0000] {logging_mixin.py:188} WARNING - /home/***/.local/lib/python3.12/site-packages/***/task/task_runner/standard_task_runner.py:61 DeprecationWarning: This process (pid=313) is multi-threaded, use of fork() may lead to deadlocks in the child.
+[2026-04-11T11:19:58.493+0000] {standard_task_runner.py:91} INFO - Job 5: Subtask generate_data
+[2026-04-11T11:19:58.493+0000] {standard_task_runner.py:63} INFO - Started process 314 to run task
+[2026-04-11T11:19:58.584+0000] {task_command.py:426} INFO - Running <TaskInstance: ingest_pipeline.generate_data manual__2026-04-11T11:19:57.634744+00:00 [running]> on host 215f6234d659
+[2026-04-11T11:19:58.716+0000] {taskinstance.py:2648} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='ingest_pipeline' AIRFLOW_CTX_TASK_ID='generate_data' AIRFLOW_CTX_EXECUTION_DATE='2026-04-11T11:19:57.634744+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2026-04-11T11:19:57.634744+00:00'
+[2026-04-11T11:19:58.718+0000] {taskinstance.py:430} INFO - ::endgroup::
+[2026-04-11T11:19:58.740+0000] {taskinstance.py:441} INFO - ::group::Post task execution logs
+[2026-04-11T11:19:58.742+0000] {taskinstance.py:2905} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 465, in _execute_task
+    result = _execute_callable(context=context, **execute_callable_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 432, in _execute_callable
+    return execute_callable(context=context, **execute_callable_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/baseoperator.py", line 400, in wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/operators/python.py", line 235, in execute
+    return_value = self.execute_callable()
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/operators/python.py", line 252, in execute_callable
+    return self.python_callable(*self.op_args, **self.op_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/airflow/dags/ingest.py", line 10, in generate
+    from dags.chaos_generator import generate_data
+ModuleNotFoundError: No module named 'dags'
+[2026-04-11T11:19:58.766+0000] {taskinstance.py:1206} INFO - Marking task as FAILED. dag_id=ingest_pipeline, task_id=generate_data, run_id=manual__2026-04-11T11:19:57.634744+00:00, execution_date=20260411T111957, start_date=20260411T111958, end_date=20260411T111958
+[2026-04-11T11:19:58.784+0000] {standard_task_runner.py:110} ERROR - Failed to execute job 5 for task generate_data (No module named 'dags'; 314)
+[2026-04-11T11:19:58.830+0000] {local_task_job_runner.py:240} INFO - Task exited with return code 1
+[2026-04-11T11:19:58.860+0000] {taskinstance.py:3498} INFO - 0 downstream tasks scheduled from follow-on schedule check
+[2026-04-11T11:19:58.870+0000] {local_task_job_runner.py:222} INFO - ::endgroup::
