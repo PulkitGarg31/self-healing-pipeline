@@ -1,0 +1,7 @@
+name: 'pipeline'
+version: '1.0.0'
+profile: 'pipeline'
+
+models:
+  pipeline:
+    materialized: table

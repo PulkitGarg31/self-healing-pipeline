@@ -1,4 +1,4 @@
-name|age|city|unknown_column
-Alice|30|Delhi
-Bob|25|Mumbai
-Carol|35|Bangalore
+name,age,city
+Alice,30,Delhi
+Bob,25,Mumbai
+Carol,35,Bangalore
