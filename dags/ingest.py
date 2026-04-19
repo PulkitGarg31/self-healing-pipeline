@@ -31,9 +31,15 @@ def validate():
             raise ValueError(f"Schema drift detected! Got: {headers}")
 
         for row in reader:
-            age = int(row[1])
+            # fix: handle age as character
+            try:
+                age = int(row[1])
+            except ValueError:
+                raise ValueError(f"Age must be a number, got: {row[1]}")
+
             if age < 0 or age > 120:
                 raise ValueError(f"Invalid age: {age}")
+
             if not row[0]:
                 raise ValueError("Name cannot be empty")
 
@@ -43,6 +49,7 @@ def ingest():
     conn = psycopg2.connect(**DB_CONN)
     cur = conn.cursor()
 
+    # raw table
     cur.execute("""
         CREATE TABLE IF NOT EXISTS raw_users (
             id SERIAL PRIMARY KEY,
@@ -53,6 +60,18 @@ def ingest():
         )
     """)
 
+    # run log table for debugging
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS pipeline_run_log (
+            id SERIAL PRIMARY KEY,
+            run_time TIMESTAMP DEFAULT NOW(),
+            rows_processed INTEGER,
+            min_timestamp TIMESTAMP,
+            max_timestamp TIMESTAMP
+        )
+    """)
+
+    rows_inserted = 0
     with open(DATA_PATH, "r") as f:
         reader = csv.reader(f)
         next(reader)
@@ -61,11 +80,18 @@ def ingest():
                 "INSERT INTO raw_users (name, age, city) VALUES (%s, %s, %s)",
                 (row[0], int(row[1]), row[2])
             )
+            rows_inserted += 1
+
+    # log this run
+    cur.execute("""
+        INSERT INTO pipeline_run_log (rows_processed, min_timestamp, max_timestamp)
+        SELECT %s, MIN(ingested_at), MAX(ingested_at) FROM raw_users
+    """, (rows_inserted,))
 
     conn.commit()
     cur.close()
     conn.close()
-    print("Data saved to PostgreSQL!")
+    print(f"Saved {rows_inserted} rows to PostgreSQL!")
 
 def run_dbt():
     import subprocess
