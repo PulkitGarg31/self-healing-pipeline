@@ -1,21 +1,19 @@
 
-  
+      
+        
+            delete from "airflow"."public"."cleaned_users"
+            where (
+                id) in (
+                select (id)
+                from "cleaned_users__dbt_tmp115217123926"
+            );
+
+        
     
 
-  create  table "airflow"."public"."cleaned_users__dbt_tmp"
-  
-  
-    as
-  
-  (
-    SELECT
-    id,
-    INITCAP(name) as name,
-    age,
-    INITCAP(city) as city,
-    ingested_at
-FROM raw_users
-WHERE age BETWEEN 0 AND 120
-  AND name IS NOT NULL
-  );
+    insert into "airflow"."public"."cleaned_users" ("id", "name", "age", "city", "ingested_at")
+    (
+        select "id", "name", "age", "city", "ingested_at"
+        from "cleaned_users__dbt_tmp115217123926"
+    )
   

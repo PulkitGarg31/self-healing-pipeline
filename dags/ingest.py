@@ -23,25 +23,44 @@ def generate():
     generate_data(chaos=chaos)
 
 def validate():
-    with open(DATA_PATH, "r") as f:
-        reader = csv.reader(f)
-        headers = next(reader)
+    import sys
+    sys.path.insert(0, '/opt/airflow/dags')
+    from healer import heal
 
-        if headers != EXPECTED_HEADERS:
-            raise ValueError(f"Schema drift detected! Got: {headers}")
+    def check_file():
+        with open(DATA_PATH, "r") as f:
+            reader = csv.reader(f)
+            headers = next(reader)
 
-        for row in reader:
-            # fix: handle age as character
-            try:
-                age = int(row[1])
-            except ValueError:
-                raise ValueError(f"Age must be a number, got: {row[1]}")
+            if headers != EXPECTED_HEADERS:
+                return False, headers, []
 
-            if age < 0 or age > 120:
-                raise ValueError(f"Invalid age: {age}")
+            rows = list(reader)
+            for row in rows:
+                try:
+                    age = int(row[1])
+                except ValueError:
+                    raise ValueError(f"Age must be a number, got: {row[1]}")
+                if age < 0 or age > 120:
+                    raise ValueError(f"Invalid age: {age}")
+                if not row[0]:
+                    raise ValueError("Name cannot be empty")
+            return True, headers, rows
 
-            if not row[0]:
-                raise ValueError("Name cannot be empty")
+    valid, headers, rows = check_file()
+
+    if not valid:
+        error = f"Schema drift detected! Got: {headers}"
+        print(error)
+        fixed = heal(error, DATA_PATH)
+
+        if fixed:
+            print("Pipeline healed! Re-validating...")
+            valid, headers, rows = check_file()
+            if not valid:
+                raise ValueError(f"Healing failed, headers still wrong: {headers}")
+        else:
+            raise ValueError(error)
 
     print("Validation passed!")
 

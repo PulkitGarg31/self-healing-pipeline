@@ -1,0 +1,19 @@
+[2026-04-25T11:52:09.597+0000] {local_task_job_runner.py:120} INFO - ::group::Pre task execution logs
+[2026-04-25T11:52:09.628+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: ingest_pipeline.validate_data manual__2026-04-25T11:52:07.359997+00:00 [queued]>
+[2026-04-25T11:52:09.638+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: ingest_pipeline.validate_data manual__2026-04-25T11:52:07.359997+00:00 [queued]>
+[2026-04-25T11:52:09.639+0000] {taskinstance.py:2306} INFO - Starting attempt 1 of 1
+[2026-04-25T11:52:09.652+0000] {taskinstance.py:2330} INFO - Executing <Task(PythonOperator): validate_data> on 2026-04-25 11:52:07.359997+00:00
+[2026-04-25T11:52:09.659+0000] {standard_task_runner.py:90} INFO - Running: ['***', 'tasks', 'run', 'ingest_pipeline', 'validate_data', 'manual__2026-04-25T11:52:07.359997+00:00', '--job-id', '16', '--raw', '--subdir', 'DAGS_FOLDER/ingest.py', '--cfg-path', '/tmp/tmpxmxmvl1u']
+[2026-04-25T11:52:09.662+0000] {logging_mixin.py:188} WARNING - /home/***/.local/lib/python3.12/site-packages/***/task/task_runner/standard_task_runner.py:61 DeprecationWarning: This process (pid=919) is multi-threaded, use of fork() may lead to deadlocks in the child.
+[2026-04-25T11:52:09.662+0000] {standard_task_runner.py:91} INFO - Job 16: Subtask validate_data
+[2026-04-25T11:52:09.663+0000] {standard_task_runner.py:63} INFO - Started process 920 to run task
+[2026-04-25T11:52:09.732+0000] {task_command.py:426} INFO - Running <TaskInstance: ingest_pipeline.validate_data manual__2026-04-25T11:52:07.359997+00:00 [running]> on host 5fbfc026ae34
+[2026-04-25T11:52:09.812+0000] {taskinstance.py:2648} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='ingest_pipeline' AIRFLOW_CTX_TASK_ID='validate_data' AIRFLOW_CTX_EXECUTION_DATE='2026-04-25T11:52:07.359997+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2026-04-25T11:52:07.359997+00:00'
+[2026-04-25T11:52:09.813+0000] {taskinstance.py:430} INFO - ::endgroup::
+[2026-04-25T11:52:09.841+0000] {logging_mixin.py:188} INFO - Validation passed!
+[2026-04-25T11:52:09.842+0000] {python.py:237} INFO - Done. Returned value was: None
+[2026-04-25T11:52:09.843+0000] {taskinstance.py:441} INFO - ::group::Post task execution logs
+[2026-04-25T11:52:09.854+0000] {taskinstance.py:1206} INFO - Marking task as SUCCESS. dag_id=ingest_pipeline, task_id=validate_data, run_id=manual__2026-04-25T11:52:07.359997+00:00, execution_date=20260425T115207, start_date=20260425T115209, end_date=20260425T115209
+[2026-04-25T11:52:09.871+0000] {local_task_job_runner.py:240} INFO - Task exited with return code 0
+[2026-04-25T11:52:09.905+0000] {taskinstance.py:3498} INFO - 1 downstream tasks scheduled from follow-on schedule check
+[2026-04-25T11:52:09.909+0000] {local_task_job_runner.py:222} INFO - ::endgroup::

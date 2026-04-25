@@ -1,18 +1,19 @@
 
-  
+      
+        
+            delete from "airflow"."public"."city_summary"
+            where (
+                city) in (
+                select (city)
+                from "city_summary__dbt_tmp115217368175"
+            );
+
+        
     
 
-  create  table "airflow"."public"."city_summary__dbt_tmp"
-  
-  
-    as
-  
-  (
-    SELECT
-    city,
-    COUNT(*) as total_users,
-    AVG(age) as avg_age
-FROM "airflow"."public"."cleaned_users"
-GROUP BY city
-  );
+    insert into "airflow"."public"."city_summary" ("city", "total_users", "avg_age")
+    (
+        select "city", "total_users", "avg_age"
+        from "city_summary__dbt_tmp115217368175"
+    )
   
