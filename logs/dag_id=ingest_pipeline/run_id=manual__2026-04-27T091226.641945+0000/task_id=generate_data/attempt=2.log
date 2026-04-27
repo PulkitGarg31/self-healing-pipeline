@@ -1,0 +1,19 @@
+[2026-04-27T09:18:15.598+0000] {local_task_job_runner.py:120} INFO - ::group::Pre task execution logs
+[2026-04-27T09:18:15.630+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: ingest_pipeline.generate_data manual__2026-04-27T09:12:26.641945+00:00 [queued]>
+[2026-04-27T09:18:15.639+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: ingest_pipeline.generate_data manual__2026-04-27T09:12:26.641945+00:00 [queued]>
+[2026-04-27T09:18:15.642+0000] {taskinstance.py:2306} INFO - Starting attempt 2 of 2
+[2026-04-27T09:18:15.658+0000] {taskinstance.py:2330} INFO - Executing <Task(PythonOperator): generate_data> on 2026-04-27 09:12:26.641945+00:00
+[2026-04-27T09:18:15.666+0000] {logging_mixin.py:188} WARNING - /home/***/.local/lib/python3.12/site-packages/***/task/task_runner/standard_task_runner.py:61 DeprecationWarning: This process (pid=1197) is multi-threaded, use of fork() may lead to deadlocks in the child.
+[2026-04-27T09:18:15.666+0000] {standard_task_runner.py:90} INFO - Running: ['***', 'tasks', 'run', 'ingest_pipeline', 'generate_data', 'manual__2026-04-27T09:12:26.641945+00:00', '--job-id', '55', '--raw', '--subdir', 'DAGS_FOLDER/ingest.py', '--cfg-path', '/tmp/tmpibfxdg4z']
+[2026-04-27T09:18:15.668+0000] {standard_task_runner.py:63} INFO - Started process 1198 to run task
+[2026-04-27T09:18:15.669+0000] {standard_task_runner.py:91} INFO - Job 55: Subtask generate_data
+[2026-04-27T09:18:15.772+0000] {task_command.py:426} INFO - Running <TaskInstance: ingest_pipeline.generate_data manual__2026-04-27T09:12:26.641945+00:00 [running]> on host c170d7ed2ddb
+[2026-04-27T09:18:15.871+0000] {taskinstance.py:2648} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='ingest_pipeline' AIRFLOW_CTX_TASK_ID='generate_data' AIRFLOW_CTX_EXECUTION_DATE='2026-04-27T09:12:26.641945+00:00' AIRFLOW_CTX_TRY_NUMBER='2' AIRFLOW_CTX_DAG_RUN_ID='manual__2026-04-27T09:12:26.641945+00:00'
+[2026-04-27T09:18:15.873+0000] {taskinstance.py:430} INFO - ::endgroup::
+[2026-04-27T09:18:15.900+0000] {logging_mixin.py:188} INFO - Data written. Chaos mode: True
+[2026-04-27T09:18:15.900+0000] {python.py:237} INFO - Done. Returned value was: None
+[2026-04-27T09:18:15.901+0000] {taskinstance.py:441} INFO - ::group::Post task execution logs
+[2026-04-27T09:18:15.913+0000] {taskinstance.py:1206} INFO - Marking task as SUCCESS. dag_id=ingest_pipeline, task_id=generate_data, run_id=manual__2026-04-27T09:12:26.641945+00:00, execution_date=20260427T091226, start_date=20260427T091815, end_date=20260427T091815
+[2026-04-27T09:18:15.931+0000] {local_task_job_runner.py:240} INFO - Task exited with return code 0
+[2026-04-27T09:18:15.960+0000] {taskinstance.py:3498} INFO - 1 downstream tasks scheduled from follow-on schedule check
+[2026-04-27T09:18:15.964+0000] {local_task_job_runner.py:222} INFO - ::endgroup::

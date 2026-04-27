@@ -1,0 +1,38 @@
+[2026-04-27T08:52:37.973+0000] {local_task_job_runner.py:120} INFO - ::group::Pre task execution logs
+[2026-04-27T08:52:38.011+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: ingest_pipeline.validate_data scheduled__2026-04-26T00:00:00+00:00 [queued]>
+[2026-04-27T08:52:38.022+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: ingest_pipeline.validate_data scheduled__2026-04-26T00:00:00+00:00 [queued]>
+[2026-04-27T08:52:38.024+0000] {taskinstance.py:2306} INFO - Starting attempt 1 of 1
+[2026-04-27T08:52:38.045+0000] {taskinstance.py:2330} INFO - Executing <Task(PythonOperator): validate_data> on 2026-04-26 00:00:00+00:00
+[2026-04-27T08:52:38.056+0000] {standard_task_runner.py:90} INFO - Running: ['***', 'tasks', 'run', 'ingest_pipeline', 'validate_data', 'scheduled__2026-04-26T00:00:00+00:00', '--job-id', '6', '--raw', '--subdir', 'DAGS_FOLDER/ingest.py', '--cfg-path', '/tmp/tmpz25i0w0y']
+[2026-04-27T08:52:38.058+0000] {logging_mixin.py:188} WARNING - /home/***/.local/lib/python3.12/site-packages/***/task/task_runner/standard_task_runner.py:61 DeprecationWarning: This process (pid=411) is multi-threaded, use of fork() may lead to deadlocks in the child.
+[2026-04-27T08:52:38.058+0000] {standard_task_runner.py:91} INFO - Job 6: Subtask validate_data
+[2026-04-27T08:52:38.059+0000] {standard_task_runner.py:63} INFO - Started process 414 to run task
+[2026-04-27T08:52:38.166+0000] {task_command.py:426} INFO - Running <TaskInstance: ingest_pipeline.validate_data scheduled__2026-04-26T00:00:00+00:00 [running]> on host c170d7ed2ddb
+[2026-04-27T08:52:38.291+0000] {taskinstance.py:2648} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='ingest_pipeline' AIRFLOW_CTX_TASK_ID='validate_data' AIRFLOW_CTX_EXECUTION_DATE='2026-04-26T00:00:00+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='scheduled__2026-04-26T00:00:00+00:00'
+[2026-04-27T08:52:38.293+0000] {taskinstance.py:430} INFO - ::endgroup::
+[2026-04-27T08:52:38.319+0000] {logging_mixin.py:188} INFO - Validation passed!
+[2026-04-27T08:52:38.320+0000] {python.py:237} INFO - Done. Returned value was: None
+[2026-04-27T08:52:38.321+0000] {taskinstance.py:441} INFO - ::group::Post task execution logs
+[2026-04-27T08:52:38.332+0000] {taskinstance.py:1206} INFO - Marking task as SUCCESS. dag_id=ingest_pipeline, task_id=validate_data, run_id=scheduled__2026-04-26T00:00:00+00:00, execution_date=20260426T000000, start_date=20260427T085238, end_date=20260427T085238
+[2026-04-27T08:52:38.348+0000] {local_task_job_runner.py:240} INFO - Task exited with return code 0
+[2026-04-27T08:52:38.372+0000] {taskinstance.py:3498} INFO - 1 downstream tasks scheduled from follow-on schedule check
+[2026-04-27T08:52:38.377+0000] {local_task_job_runner.py:222} INFO - ::endgroup::
+[2026-04-27T09:48:06.932+0000] {local_task_job_runner.py:120} INFO - ::group::Pre task execution logs
+[2026-04-27T09:48:06.972+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: ingest_pipeline.validate_data scheduled__2026-04-26T00:00:00+00:00 [queued]>
+[2026-04-27T09:48:06.982+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: ingest_pipeline.validate_data scheduled__2026-04-26T00:00:00+00:00 [queued]>
+[2026-04-27T09:48:06.984+0000] {taskinstance.py:2306} INFO - Starting attempt 1 of 1
+[2026-04-27T09:48:07.003+0000] {taskinstance.py:2330} INFO - Executing <Task(PythonOperator): validate_data> on 2026-04-26 00:00:00+00:00
+[2026-04-27T09:48:07.012+0000] {standard_task_runner.py:90} INFO - Running: ['***', 'tasks', 'run', 'ingest_pipeline', 'validate_data', 'scheduled__2026-04-26T00:00:00+00:00', '--job-id', '5', '--raw', '--subdir', 'DAGS_FOLDER/ingest.py', '--cfg-path', '/tmp/tmpyn9qv_ua']
+[2026-04-27T09:48:07.015+0000] {standard_task_runner.py:91} INFO - Job 5: Subtask validate_data
+[2026-04-27T09:48:07.016+0000] {logging_mixin.py:188} WARNING - /home/***/.local/lib/python3.12/site-packages/***/task/task_runner/standard_task_runner.py:61 DeprecationWarning: This process (pid=432) is multi-threaded, use of fork() may lead to deadlocks in the child.
+[2026-04-27T09:48:07.017+0000] {standard_task_runner.py:63} INFO - Started process 433 to run task
+[2026-04-27T09:48:07.109+0000] {task_command.py:426} INFO - Running <TaskInstance: ingest_pipeline.validate_data scheduled__2026-04-26T00:00:00+00:00 [running]> on host 54d630d5d86b
+[2026-04-27T09:48:07.219+0000] {taskinstance.py:2648} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='ingest_pipeline' AIRFLOW_CTX_TASK_ID='validate_data' AIRFLOW_CTX_EXECUTION_DATE='2026-04-26T00:00:00+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='scheduled__2026-04-26T00:00:00+00:00'
+[2026-04-27T09:48:07.220+0000] {taskinstance.py:430} INFO - ::endgroup::
+[2026-04-27T09:48:07.275+0000] {logging_mixin.py:188} INFO - Validation passed!
+[2026-04-27T09:48:07.277+0000] {python.py:237} INFO - Done. Returned value was: None
+[2026-04-27T09:48:07.278+0000] {taskinstance.py:441} INFO - ::group::Post task execution logs
+[2026-04-27T09:48:07.290+0000] {taskinstance.py:1206} INFO - Marking task as SUCCESS. dag_id=ingest_pipeline, task_id=validate_data, run_id=scheduled__2026-04-26T00:00:00+00:00, execution_date=20260426T000000, start_date=20260427T094806, end_date=20260427T094807
+[2026-04-27T09:48:07.308+0000] {local_task_job_runner.py:240} INFO - Task exited with return code 0
+[2026-04-27T09:48:07.337+0000] {taskinstance.py:3498} INFO - 1 downstream tasks scheduled from follow-on schedule check
+[2026-04-27T09:48:07.341+0000] {local_task_job_runner.py:222} INFO - ::endgroup::

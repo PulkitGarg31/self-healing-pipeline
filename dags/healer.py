@@ -1,7 +1,7 @@
 import requests
 import json
 import psycopg2
-from datetime import datetime
+import csv
 
 DB_CONN = {
     "host": "postgres",
@@ -33,11 +33,9 @@ Format:
         "model": "llama3.2",
         "prompt": prompt,
         "stream": False
-    })
+    }, timeout=60)
 
     raw = response.json()["response"]
-
-    # extract JSON from response
     start = raw.find("{")
     end = raw.rfind("}") + 1
     return json.loads(raw[start:end])
@@ -66,26 +64,26 @@ def log_intervention(error, llm_response, success):
     conn.close()
 
 def heal(error_message, data_path):
-    import csv
-
-    # read current headers
     with open(data_path, "r") as f:
         reader = csv.reader(f)
         current_headers = next(reader)
         rows = list(reader)
 
     print(f"Asking LLM to diagnose: {error_message}")
-    diagnosis = ask_llm(error_message, current_headers)
-    print(f"LLM diagnosis: {diagnosis}")
 
     try:
-        # apply fix — rewrite CSV with correct headers
+        diagnosis = ask_llm(error_message, current_headers)
+        print(f"LLM diagnosis: {diagnosis}")
+
         fixed_headers = diagnosis["expected_headers"]
 
         with open(data_path, "w", newline="") as f:
             writer = csv.writer(f)
             writer.writerow(fixed_headers)
             for row in rows:
+                # handle pipe-delimited rows
+                if len(row) == 1 and "|" in row[0]:
+                    row = row[0].split("|")
                 writer.writerow(row[:len(fixed_headers)])
 
         log_intervention(error_message, diagnosis, True)
@@ -93,6 +91,6 @@ def heal(error_message, data_path):
         return True
 
     except Exception as e:
-        log_intervention(error_message, diagnosis, False)
+        log_intervention(error_message, {"error": str(e)}, False)
         print(f"Fix failed: {e}")
         return False

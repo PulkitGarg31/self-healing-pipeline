@@ -1,0 +1,19 @@
+[2026-04-27T09:33:41.201+0000] {local_task_job_runner.py:120} INFO - ::group::Pre task execution logs
+[2026-04-27T09:33:41.252+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: ingest_pipeline.ingest_data manual__2026-04-27T09:33:31.193379+00:00 [queued]>
+[2026-04-27T09:33:41.275+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: ingest_pipeline.ingest_data manual__2026-04-27T09:33:31.193379+00:00 [queued]>
+[2026-04-27T09:33:41.277+0000] {taskinstance.py:2306} INFO - Starting attempt 1 of 1
+[2026-04-27T09:33:41.312+0000] {taskinstance.py:2330} INFO - Executing <Task(PythonOperator): ingest_data> on 2026-04-27 09:33:31.193379+00:00
+[2026-04-27T09:33:41.324+0000] {logging_mixin.py:188} WARNING - /home/***/.local/lib/python3.12/site-packages/***/task/task_runner/standard_task_runner.py:61 DeprecationWarning: This process (pid=1975) is multi-threaded, use of fork() may lead to deadlocks in the child.
+[2026-04-27T09:33:41.324+0000] {standard_task_runner.py:90} INFO - Running: ['***', 'tasks', 'run', 'ingest_pipeline', 'ingest_data', 'manual__2026-04-27T09:33:31.193379+00:00', '--job-id', '160', '--raw', '--subdir', 'DAGS_FOLDER/ingest.py', '--cfg-path', '/tmp/tmpwnfq7rod']
+[2026-04-27T09:33:41.327+0000] {standard_task_runner.py:63} INFO - Started process 1976 to run task
+[2026-04-27T09:33:41.328+0000] {standard_task_runner.py:91} INFO - Job 160: Subtask ingest_data
+[2026-04-27T09:33:41.458+0000] {task_command.py:426} INFO - Running <TaskInstance: ingest_pipeline.ingest_data manual__2026-04-27T09:33:31.193379+00:00 [running]> on host c170d7ed2ddb
+[2026-04-27T09:33:41.684+0000] {taskinstance.py:2648} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='ingest_pipeline' AIRFLOW_CTX_TASK_ID='ingest_data' AIRFLOW_CTX_EXECUTION_DATE='2026-04-27T09:33:31.193379+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2026-04-27T09:33:31.193379+00:00'
+[2026-04-27T09:33:41.687+0000] {taskinstance.py:430} INFO - ::endgroup::
+[2026-04-27T09:33:41.757+0000] {logging_mixin.py:188} INFO - Saved 3 rows to PostgreSQL!
+[2026-04-27T09:33:41.760+0000] {python.py:237} INFO - Done. Returned value was: None
+[2026-04-27T09:33:41.762+0000] {taskinstance.py:441} INFO - ::group::Post task execution logs
+[2026-04-27T09:33:41.788+0000] {taskinstance.py:1206} INFO - Marking task as SUCCESS. dag_id=ingest_pipeline, task_id=ingest_data, run_id=manual__2026-04-27T09:33:31.193379+00:00, execution_date=20260427T093331, start_date=20260427T093341, end_date=20260427T093341
+[2026-04-27T09:33:41.826+0000] {local_task_job_runner.py:240} INFO - Task exited with return code 0
+[2026-04-27T09:33:41.872+0000] {taskinstance.py:3498} INFO - 1 downstream tasks scheduled from follow-on schedule check
+[2026-04-27T09:33:41.877+0000] {local_task_job_runner.py:222} INFO - ::endgroup::

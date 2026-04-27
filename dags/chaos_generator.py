@@ -1,28 +1,27 @@
 import csv
 import random
-import os
 
 OUTPUT_PATH = "/opt/airflow/dags/data.csv"
-
 NORMAL_HEADERS = ["name", "age", "city"]
 
-def generate_data(chaos=False):
-    rows = [
-        ["Alice", 30, "Delhi"],
-        ["Bob", 25, "Mumbai"],
-        ["Carol", 35, "Bangalore"],
-    ]
+ROWS = [
+    ["Alice", "30", "Delhi"],
+    ["Bob", "25", "Mumbai"],
+    ["Carol", "35", "Bangalore"],
+]
 
+def generate_data(chaos=False):
     with open(OUTPUT_PATH, "w", newline="") as f:
         if chaos:
-            # Schema drift: add unexpected column, change delimiter
             writer = csv.writer(f, delimiter="|")
             writer.writerow(["name", "age", "city", "unknown_column"])
+            for row in ROWS:
+                writer.writerow(row + ["extra"])
         else:
             writer = csv.writer(f)
             writer.writerow(NORMAL_HEADERS)
-
-        writer.writerows(rows)
+            for row in ROWS:
+                writer.writerow(row)
 
     print(f"Data written. Chaos mode: {chaos}")
 

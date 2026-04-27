@@ -1,0 +1,41 @@
+[2026-04-27T09:36:57.390+0000] {local_task_job_runner.py:120} INFO - ::group::Pre task execution logs
+[2026-04-27T09:36:57.440+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: ingest_pipeline.validate_data manual__2026-04-27T09:36:55.300190+00:00 [queued]>
+[2026-04-27T09:36:57.456+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: ingest_pipeline.validate_data manual__2026-04-27T09:36:55.300190+00:00 [queued]>
+[2026-04-27T09:36:57.458+0000] {taskinstance.py:2306} INFO - Starting attempt 1 of 1
+[2026-04-27T09:36:57.483+0000] {taskinstance.py:2330} INFO - Executing <Task(PythonOperator): validate_data> on 2026-04-27 09:36:55.300190+00:00
+[2026-04-27T09:36:57.492+0000] {standard_task_runner.py:90} INFO - Running: ['***', 'tasks', 'run', 'ingest_pipeline', 'validate_data', 'manual__2026-04-27T09:36:55.300190+00:00', '--job-id', '178', '--raw', '--subdir', 'DAGS_FOLDER/ingest.py', '--cfg-path', '/tmp/tmppsf7czz0']
+[2026-04-27T09:36:57.493+0000] {logging_mixin.py:188} WARNING - /home/***/.local/lib/python3.12/site-packages/***/task/task_runner/standard_task_runner.py:61 DeprecationWarning: This process (pid=2149) is multi-threaded, use of fork() may lead to deadlocks in the child.
+[2026-04-27T09:36:57.495+0000] {standard_task_runner.py:91} INFO - Job 178: Subtask validate_data
+[2026-04-27T09:36:57.496+0000] {standard_task_runner.py:63} INFO - Started process 2152 to run task
+[2026-04-27T09:36:57.582+0000] {task_command.py:426} INFO - Running <TaskInstance: ingest_pipeline.validate_data manual__2026-04-27T09:36:55.300190+00:00 [running]> on host c170d7ed2ddb
+[2026-04-27T09:36:57.701+0000] {taskinstance.py:2648} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='ingest_pipeline' AIRFLOW_CTX_TASK_ID='validate_data' AIRFLOW_CTX_EXECUTION_DATE='2026-04-27T09:36:55.300190+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2026-04-27T09:36:55.300190+00:00'
+[2026-04-27T09:36:57.702+0000] {taskinstance.py:430} INFO - ::endgroup::
+[2026-04-27T09:36:57.731+0000] {taskinstance.py:441} INFO - ::group::Post task execution logs
+[2026-04-27T09:36:57.733+0000] {taskinstance.py:2905} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 465, in _execute_task
+    result = _execute_callable(context=context, **execute_callable_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 432, in _execute_callable
+    return execute_callable(context=context, **execute_callable_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/baseoperator.py", line 400, in wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/operators/python.py", line 235, in execute
+    return_value = self.execute_callable()
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/operators/python.py", line 252, in execute_callable
+    return self.python_callable(*self.op_args, **self.op_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/airflow/dags/ingest.py", line 57, in validate
+    valid, headers, rows = check_file()
+                           ^^^^^^^^^^^^
+  File "/opt/airflow/dags/ingest.py", line 29, in check_file
+    raise ValueError("Data file is empty!")
+ValueError: Data file is empty!
+[2026-04-27T09:36:57.752+0000] {taskinstance.py:1206} INFO - Marking task as FAILED. dag_id=ingest_pipeline, task_id=validate_data, run_id=manual__2026-04-27T09:36:55.300190+00:00, execution_date=20260427T093655, start_date=20260427T093657, end_date=20260427T093657
+[2026-04-27T09:36:57.766+0000] {standard_task_runner.py:110} ERROR - Failed to execute job 178 for task validate_data (Data file is empty!; 2152)
+[2026-04-27T09:36:57.773+0000] {local_task_job_runner.py:240} INFO - Task exited with return code 1
+[2026-04-27T09:36:57.796+0000] {taskinstance.py:3498} INFO - 0 downstream tasks scheduled from follow-on schedule check
+[2026-04-27T09:36:57.802+0000] {local_task_job_runner.py:222} INFO - ::endgroup::

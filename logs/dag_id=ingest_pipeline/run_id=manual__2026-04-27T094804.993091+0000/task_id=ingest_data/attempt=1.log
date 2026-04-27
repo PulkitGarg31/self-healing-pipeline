@@ -1,0 +1,44 @@
+[2026-04-27T09:48:08.603+0000] {local_task_job_runner.py:120} INFO - ::group::Pre task execution logs
+[2026-04-27T09:48:08.661+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: ingest_pipeline.ingest_data manual__2026-04-27T09:48:04.993091+00:00 [queued]>
+[2026-04-27T09:48:08.677+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: ingest_pipeline.ingest_data manual__2026-04-27T09:48:04.993091+00:00 [queued]>
+[2026-04-27T09:48:08.680+0000] {taskinstance.py:2306} INFO - Starting attempt 1 of 1
+[2026-04-27T09:48:08.709+0000] {taskinstance.py:2330} INFO - Executing <Task(PythonOperator): ingest_data> on 2026-04-27 09:48:04.993091+00:00
+[2026-04-27T09:48:08.732+0000] {logging_mixin.py:188} WARNING - /home/***/.local/lib/python3.12/site-packages/***/task/task_runner/standard_task_runner.py:61 DeprecationWarning: This process (pid=436) is multi-threaded, use of fork() may lead to deadlocks in the child.
+[2026-04-27T09:48:08.729+0000] {standard_task_runner.py:90} INFO - Running: ['***', 'tasks', 'run', 'ingest_pipeline', 'ingest_data', 'manual__2026-04-27T09:48:04.993091+00:00', '--job-id', '8', '--raw', '--subdir', 'DAGS_FOLDER/ingest.py', '--cfg-path', '/tmp/tmpevte26zk']
+[2026-04-27T09:48:08.734+0000] {standard_task_runner.py:63} INFO - Started process 439 to run task
+[2026-04-27T09:48:08.736+0000] {standard_task_runner.py:91} INFO - Job 8: Subtask ingest_data
+[2026-04-27T09:48:08.866+0000] {task_command.py:426} INFO - Running <TaskInstance: ingest_pipeline.ingest_data manual__2026-04-27T09:48:04.993091+00:00 [running]> on host 54d630d5d86b
+[2026-04-27T09:48:08.979+0000] {taskinstance.py:2648} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='ingest_pipeline' AIRFLOW_CTX_TASK_ID='ingest_data' AIRFLOW_CTX_EXECUTION_DATE='2026-04-27T09:48:04.993091+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2026-04-27T09:48:04.993091+00:00'
+[2026-04-27T09:48:08.981+0000] {taskinstance.py:430} INFO - ::endgroup::
+[2026-04-27T09:48:09.031+0000] {taskinstance.py:441} INFO - ::group::Post task execution logs
+[2026-04-27T09:48:09.033+0000] {taskinstance.py:2905} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 465, in _execute_task
+    result = _execute_callable(context=context, **execute_callable_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 432, in _execute_callable
+    return execute_callable(context=context, **execute_callable_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/baseoperator.py", line 400, in wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/operators/python.py", line 235, in execute
+    return_value = self.execute_callable()
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/operators/python.py", line 252, in execute_callable
+    return self.python_callable(*self.op_args, **self.op_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/airflow/dags/ingest.py", line 118, in ingest
+    raise e
+  File "/opt/airflow/dags/ingest.py", line 99, in ingest
+    valid, headers, rows = check_file()
+                           ^^^^^^^^^^^^
+  File "/opt/airflow/dags/ingest.py", line 33, in check_file
+    headers = next(reader)
+              ^^^^^^^^^^^^
+StopIteration
+[2026-04-27T09:48:09.060+0000] {taskinstance.py:1206} INFO - Marking task as FAILED. dag_id=ingest_pipeline, task_id=ingest_data, run_id=manual__2026-04-27T09:48:04.993091+00:00, execution_date=20260427T094804, start_date=20260427T094808, end_date=20260427T094809
+[2026-04-27T09:48:09.077+0000] {standard_task_runner.py:110} ERROR - Failed to execute job 8 for task ingest_data (; 439)
+[2026-04-27T09:48:09.086+0000] {local_task_job_runner.py:240} INFO - Task exited with return code 1
+[2026-04-27T09:48:09.117+0000] {taskinstance.py:3498} INFO - 0 downstream tasks scheduled from follow-on schedule check
+[2026-04-27T09:48:09.127+0000] {local_task_job_runner.py:222} INFO - ::endgroup::
