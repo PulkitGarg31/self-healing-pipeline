@@ -138,4 +138,7 @@ with DAG(
     catchup=False
 ) as dag:
 
-    generate_task = PythonOperator(task_id="generate_data", python_calla
+    generate_task = PythonOperator(task_id="generate_data", python_callable=generate)
+    validate_task = PythonOperator(task_id="validate_data", python_callable=validate)
+    ingest_task = PythonOperator(task_id="ingest_data", python_callable=ingest)
+    dbt_task = PythonOperator(task_id="transform_data", python_callable=run_dbt)

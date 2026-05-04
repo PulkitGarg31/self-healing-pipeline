@@ -1,1 +1,1 @@
-{"_invocation_id": "c0f7f2d1-36d2-434e-9f9b-43bfae290f29", "linked": {"0": {"name": "model.pipeline.city_summary", "type": "model"}, "1": {"name": "model.pipeline.cleaned_users", "type": "model", "succ": [0]}}}
+{"_invocation_id": "9927b6c6-587e-42ba-9be9-95ce531efdd8", "linked": {"0": {"name": "model.pipeline.city_summary", "type": "model"}, "1": {"name": "model.pipeline.cleaned_users", "type": "model", "succ": [0]}}}

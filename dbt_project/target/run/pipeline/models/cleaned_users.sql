@@ -5,7 +5,7 @@
             where (
                 id) in (
                 select (id)
-                from "cleaned_users__dbt_tmp094834470363"
+                from "cleaned_users__dbt_tmp173010512140"
             );
 
         
@@ -14,6 +14,6 @@
     insert into "airflow"."public"."cleaned_users" ("id", "name", "age", "city", "ingested_at")
     (
         select "id", "name", "age", "city", "ingested_at"
-        from "cleaned_users__dbt_tmp094834470363"
+        from "cleaned_users__dbt_tmp173010512140"
     )
   

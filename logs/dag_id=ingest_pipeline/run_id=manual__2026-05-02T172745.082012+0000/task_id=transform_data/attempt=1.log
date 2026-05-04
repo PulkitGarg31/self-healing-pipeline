@@ -1,0 +1,58 @@
+[2026-05-02T17:27:46.315+0000] {local_task_job_runner.py:120} INFO - ::group::Pre task execution logs
+[2026-05-02T17:27:46.429+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: ingest_pipeline.transform_data manual__2026-05-02T17:27:45.082012+00:00 [queued]>
+[2026-05-02T17:27:46.448+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: ingest_pipeline.transform_data manual__2026-05-02T17:27:45.082012+00:00 [queued]>
+[2026-05-02T17:27:46.451+0000] {taskinstance.py:2306} INFO - Starting attempt 1 of 1
+[2026-05-02T17:27:46.485+0000] {taskinstance.py:2330} INFO - Executing <Task(PythonOperator): transform_data> on 2026-05-02 17:27:45.082012+00:00
+[2026-05-02T17:27:46.500+0000] {standard_task_runner.py:90} INFO - Running: ['***', 'tasks', 'run', 'ingest_pipeline', 'transform_data', 'manual__2026-05-02T17:27:45.082012+00:00', '--job-id', '10', '--raw', '--subdir', 'DAGS_FOLDER/ingest.py', '--cfg-path', '/tmp/tmpadex7qk5']
+[2026-05-02T17:27:46.508+0000] {standard_task_runner.py:91} INFO - Job 10: Subtask transform_data
+[2026-05-02T17:27:46.512+0000] {logging_mixin.py:188} WARNING - /home/***/.local/lib/python3.12/site-packages/***/task/task_runner/standard_task_runner.py:61 DeprecationWarning: This process (pid=626) is multi-threaded, use of fork() may lead to deadlocks in the child.
+[2026-05-02T17:27:46.514+0000] {standard_task_runner.py:63} INFO - Started process 631 to run task
+[2026-05-02T17:27:46.659+0000] {task_command.py:426} INFO - Running <TaskInstance: ingest_pipeline.transform_data manual__2026-05-02T17:27:45.082012+00:00 [running]> on host 5e0a28a878ef
+[2026-05-02T17:27:46.828+0000] {taskinstance.py:2648} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='ingest_pipeline' AIRFLOW_CTX_TASK_ID='transform_data' AIRFLOW_CTX_EXECUTION_DATE='2026-05-02T17:27:45.082012+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2026-05-02T17:27:45.082012+00:00'
+[2026-05-02T17:27:46.830+0000] {taskinstance.py:430} INFO - ::endgroup::
+[2026-05-02T17:27:55.841+0000] {logging_mixin.py:188} INFO - 17:27:51  Running with dbt=1.7.0
+17:27:52  Registered adapter: postgres=1.7.0
+17:27:52  Found 2 models, 0 sources, 0 exposures, 0 metrics, 401 macros, 0 groups, 0 semantic models
+17:27:52  
+17:27:52  Concurrency: 1 threads (target='dev')
+17:27:52  
+17:27:52  1 of 2 START sql incremental model public.cleaned_users ........................ [RUN]
+17:27:52  1 of 2 ERROR creating sql incremental model public.cleaned_users ............... [ERROR in 0.23s]
+17:27:52  2 of 2 SKIP relation public.city_summary ....................................... [SKIP]
+17:27:52  
+17:27:52  Finished running 2 incremental models in 0 hours 0 minutes and 0.52 seconds (0.52s).
+17:27:53  
+17:27:53  Completed with 1 error and 0 warnings:
+17:27:53  
+17:27:53    Database Error in model cleaned_users (models/cleaned_users.sql)
+  duplicate key value violates unique constraint "pg_type_typname_nsp_index"
+  DETAIL:  Key (typname, typnamespace)=(cleaned_users, 2200) already exists.
+  compiled Code at target/run/pipeline/models/cleaned_users.sql
+17:27:53  
+17:27:53  Done. PASS=0 WARN=0 ERROR=1 SKIP=1 TOTAL=2
+[2026-05-02T17:27:55.844+0000] {taskinstance.py:441} INFO - ::group::Post task execution logs
+[2026-05-02T17:27:55.845+0000] {taskinstance.py:2905} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 465, in _execute_task
+    result = _execute_callable(context=context, **execute_callable_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 432, in _execute_callable
+    return execute_callable(context=context, **execute_callable_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/baseoperator.py", line 400, in wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/operators/python.py", line 235, in execute
+    return_value = self.execute_callable()
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/operators/python.py", line 252, in execute_callable
+    return self.python_callable(*self.op_args, **self.op_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/airflow/dags/ingest.py", line 132, in run_dbt
+    raise Exception(result.stderr)
+Exception
+[2026-05-02T17:27:55.867+0000] {taskinstance.py:1206} INFO - Marking task as FAILED. dag_id=ingest_pipeline, task_id=transform_data, run_id=manual__2026-05-02T17:27:45.082012+00:00, execution_date=20260502T172745, start_date=20260502T172746, end_date=20260502T172755
+[2026-05-02T17:27:55.885+0000] {standard_task_runner.py:110} ERROR - Failed to execute job 10 for task transform_data (; 631)
+[2026-05-02T17:27:55.892+0000] {local_task_job_runner.py:240} INFO - Task exited with return code 1
+[2026-05-02T17:27:55.913+0000] {taskinstance.py:3498} INFO - 0 downstream tasks scheduled from follow-on schedule check
+[2026-05-02T17:27:55.918+0000] {local_task_job_runner.py:222} INFO - ::endgroup::

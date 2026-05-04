@@ -1,0 +1,41 @@
+[2026-05-02T17:27:46.315+0000] {local_task_job_runner.py:120} INFO - ::group::Pre task execution logs
+[2026-05-02T17:27:46.428+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: ingest_pipeline.validate_data scheduled__2026-05-01T00:00:00+00:00 [queued]>
+[2026-05-02T17:27:46.448+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: ingest_pipeline.validate_data scheduled__2026-05-01T00:00:00+00:00 [queued]>
+[2026-05-02T17:27:46.451+0000] {taskinstance.py:2306} INFO - Starting attempt 1 of 1
+[2026-05-02T17:27:46.485+0000] {taskinstance.py:2330} INFO - Executing <Task(PythonOperator): validate_data> on 2026-05-01 00:00:00+00:00
+[2026-05-02T17:27:46.502+0000] {standard_task_runner.py:90} INFO - Running: ['***', 'tasks', 'run', 'ingest_pipeline', 'validate_data', 'scheduled__2026-05-01T00:00:00+00:00', '--job-id', '7', '--raw', '--subdir', 'DAGS_FOLDER/ingest.py', '--cfg-path', '/tmp/tmpp1ph7238']
+[2026-05-02T17:27:46.509+0000] {standard_task_runner.py:91} INFO - Job 7: Subtask validate_data
+[2026-05-02T17:27:46.517+0000] {logging_mixin.py:188} WARNING - /home/***/.local/lib/python3.12/site-packages/***/task/task_runner/standard_task_runner.py:61 DeprecationWarning: This process (pid=621) is multi-threaded, use of fork() may lead to deadlocks in the child.
+[2026-05-02T17:27:46.520+0000] {standard_task_runner.py:63} INFO - Started process 630 to run task
+[2026-05-02T17:27:46.658+0000] {task_command.py:426} INFO - Running <TaskInstance: ingest_pipeline.validate_data scheduled__2026-05-01T00:00:00+00:00 [running]> on host 5e0a28a878ef
+[2026-05-02T17:27:46.832+0000] {taskinstance.py:2648} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='ingest_pipeline' AIRFLOW_CTX_TASK_ID='validate_data' AIRFLOW_CTX_EXECUTION_DATE='2026-05-01T00:00:00+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='scheduled__2026-05-01T00:00:00+00:00'
+[2026-05-02T17:27:46.834+0000] {taskinstance.py:430} INFO - ::endgroup::
+[2026-05-02T17:27:46.929+0000] {logging_mixin.py:188} INFO - Schema drift detected! Got: ['name|age|city|unknown_column']
+[2026-05-02T17:27:46.932+0000] {logging_mixin.py:188} INFO - Asking LLM to diagnose: Schema drift detected! Got: ['name|age|city|unknown_column']
+[2026-05-02T17:27:46.991+0000] {logging_mixin.py:188} INFO - Fix failed: HTTPConnectionPool(host='host.docker.internal', port=11434): Max retries exceeded with url: /api/generate (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x77facf55e5d0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+[2026-05-02T17:27:46.993+0000] {taskinstance.py:441} INFO - ::group::Post task execution logs
+[2026-05-02T17:27:46.994+0000] {taskinstance.py:2905} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 465, in _execute_task
+    result = _execute_callable(context=context, **execute_callable_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 432, in _execute_callable
+    return execute_callable(context=context, **execute_callable_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/baseoperator.py", line 400, in wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/operators/python.py", line 235, in execute
+    return_value = self.execute_callable()
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/operators/python.py", line 252, in execute_callable
+    return self.python_callable(*self.op_args, **self.op_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/airflow/dags/ingest.py", line 69, in validate
+    raise ValueError(error)
+ValueError: Schema drift detected! Got: ['name|age|city|unknown_column']
+[2026-05-02T17:27:47.023+0000] {taskinstance.py:1206} INFO - Marking task as FAILED. dag_id=ingest_pipeline, task_id=validate_data, run_id=scheduled__2026-05-01T00:00:00+00:00, execution_date=20260501T000000, start_date=20260502T172746, end_date=20260502T172747
+[2026-05-02T17:27:47.051+0000] {standard_task_runner.py:110} ERROR - Failed to execute job 7 for task validate_data (Schema drift detected! Got: ['name|age|city|unknown_column']; 630)
+[2026-05-02T17:27:47.062+0000] {local_task_job_runner.py:240} INFO - Task exited with return code 1
+[2026-05-02T17:27:47.097+0000] {taskinstance.py:3498} INFO - 0 downstream tasks scheduled from follow-on schedule check
+[2026-05-02T17:27:47.102+0000] {local_task_job_runner.py:222} INFO - ::endgroup::
