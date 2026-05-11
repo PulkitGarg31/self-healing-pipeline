@@ -1,0 +1,236 @@
+[2026-05-11T10:34:59.252+0000] {processor.py:161} INFO - Started process (PID=334) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:34:59.255+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:34:59.258+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:34:59.258+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:34:59.304+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:34:59.471+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:34:59.470+0000] {override.py:1829} INFO - Created Permission View: can delete on DAG:ingest_pipeline
+[2026-05-11T10:34:59.488+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:34:59.488+0000] {override.py:1829} INFO - Created Permission View: can read on DAG:ingest_pipeline
+[2026-05-11T10:34:59.498+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:34:59.497+0000] {override.py:1829} INFO - Created Permission View: can edit on DAG:ingest_pipeline
+[2026-05-11T10:34:59.500+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:34:59.500+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:34:59.513+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:34:59.513+0000] {dag.py:3118} INFO - Creating ORM DAG for ingest_pipeline
+[2026-05-11T10:34:59.530+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:34:59.530+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:34:59.559+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.314 seconds
+[2026-05-11T10:35:30.095+0000] {processor.py:161} INFO - Started process (PID=375) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:35:30.104+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:35:30.115+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:35:30.113+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:35:30.251+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:35:30.331+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:35:30.331+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:35:30.386+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:35:30.386+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:35:30.440+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.360 seconds
+[2026-05-11T10:36:00.834+0000] {processor.py:161} INFO - Started process (PID=385) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:36:00.835+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:36:00.838+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:36:00.837+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:36:00.865+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:36:00.899+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:36:00.899+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:36:00.930+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:36:00.930+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:36:00.950+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.123 seconds
+[2026-05-11T10:36:31.516+0000] {processor.py:161} INFO - Started process (PID=395) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:36:31.518+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:36:31.520+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:36:31.520+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:36:31.547+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:36:31.589+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:36:31.589+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:36:31.612+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:36:31.612+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:36:31.636+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.126 seconds
+[2026-05-11T10:37:02.170+0000] {processor.py:161} INFO - Started process (PID=405) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:37:02.172+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:37:02.175+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:37:02.174+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:37:02.219+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:37:02.250+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:37:02.250+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:37:02.276+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:37:02.276+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:37:02.312+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.148 seconds
+[2026-05-11T10:37:32.850+0000] {processor.py:161} INFO - Started process (PID=415) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:37:32.851+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:37:32.854+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:37:32.853+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:37:32.902+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:37:32.936+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:37:32.936+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:37:32.964+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:37:32.964+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:37:32.993+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.149 seconds
+[2026-05-11T10:38:03.559+0000] {processor.py:161} INFO - Started process (PID=426) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:38:03.561+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:38:03.563+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:38:03.563+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:38:03.588+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:38:03.619+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:38:03.618+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:38:03.645+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:38:03.644+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:38:03.672+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.119 seconds
+[2026-05-11T10:38:34.082+0000] {processor.py:161} INFO - Started process (PID=436) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:38:34.084+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:38:34.089+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:38:34.088+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:38:34.116+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:38:34.147+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:38:34.147+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:38:34.168+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:38:34.168+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:38:34.213+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.138 seconds
+[2026-05-11T10:39:04.611+0000] {processor.py:161} INFO - Started process (PID=446) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:39:04.613+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:39:04.616+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:39:04.615+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:39:04.657+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:39:04.700+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:39:04.700+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:39:04.726+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:39:04.726+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:39:04.758+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.155 seconds
+[2026-05-11T10:39:35.200+0000] {processor.py:161} INFO - Started process (PID=456) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:39:35.202+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:39:35.205+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:39:35.204+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:39:35.248+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:39:35.278+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:39:35.278+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:39:35.301+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:39:35.301+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:39:35.345+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.152 seconds
+[2026-05-11T10:40:05.893+0000] {processor.py:161} INFO - Started process (PID=466) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:40:05.895+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:40:05.898+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:40:05.897+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:40:05.943+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:40:05.973+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:40:05.973+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:40:05.996+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:40:05.995+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:40:06.018+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.131 seconds
+[2026-05-11T10:40:36.460+0000] {processor.py:161} INFO - Started process (PID=476) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:40:36.462+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:40:36.465+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:40:36.464+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:40:36.505+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:40:36.546+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:40:36.546+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:40:36.573+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:40:36.572+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:40:36.599+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.149 seconds
+[2026-05-11T10:41:07.023+0000] {processor.py:161} INFO - Started process (PID=486) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:41:07.026+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:41:07.030+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:41:07.029+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:41:07.072+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:41:07.116+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:41:07.116+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:41:07.139+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:41:07.139+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:41:07.163+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.153 seconds
+[2026-05-11T10:41:37.555+0000] {processor.py:161} INFO - Started process (PID=496) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:41:37.556+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:41:37.559+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:41:37.558+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:41:37.594+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:41:37.624+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:41:37.624+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:41:37.648+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:41:37.647+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:41:37.679+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.131 seconds
+[2026-05-11T10:42:08.075+0000] {processor.py:161} INFO - Started process (PID=506) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:42:08.077+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:42:08.079+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:42:08.079+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:42:08.115+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:42:08.151+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:42:08.151+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:42:08.175+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:42:08.175+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:42:08.199+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.133 seconds
+[2026-05-11T10:42:38.568+0000] {processor.py:161} INFO - Started process (PID=516) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:42:38.569+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:42:38.572+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:42:38.572+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:42:38.618+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:42:38.648+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:42:38.648+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:42:38.670+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:42:38.670+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:42:38.694+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.133 seconds
+[2026-05-11T10:43:09.109+0000] {processor.py:161} INFO - Started process (PID=526) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:43:09.113+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:43:09.116+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:43:09.116+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:43:09.149+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:43:09.176+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:43:09.176+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:43:09.197+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:43:09.197+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:43:09.219+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.117 seconds
+[2026-05-11T10:45:10.143+0000] {processor.py:161} INFO - Started process (PID=336) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:45:10.144+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:45:10.146+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:45:10.146+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:45:10.184+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:45:10.323+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:45:10.323+0000] {override.py:1829} INFO - Created Permission View: can delete on DAG:ingest_pipeline
+[2026-05-11T10:45:10.337+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:45:10.337+0000] {override.py:1829} INFO - Created Permission View: can edit on DAG:ingest_pipeline
+[2026-05-11T10:45:10.347+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:45:10.347+0000] {override.py:1829} INFO - Created Permission View: can read on DAG:ingest_pipeline
+[2026-05-11T10:45:10.348+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:45:10.348+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:45:10.360+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:45:10.360+0000] {dag.py:3118} INFO - Creating ORM DAG for ingest_pipeline
+[2026-05-11T10:45:10.373+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:45:10.373+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:45:10.402+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.265 seconds
+[2026-05-11T10:45:40.718+0000] {processor.py:161} INFO - Started process (PID=377) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:45:40.720+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:45:40.722+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:45:40.722+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:45:40.764+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:45:40.798+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:45:40.798+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:45:40.822+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:45:40.822+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:45:40.845+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.134 seconds
+[2026-05-11T10:46:11.479+0000] {processor.py:161} INFO - Started process (PID=388) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:46:11.480+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:46:11.482+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:46:11.482+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:46:11.508+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:46:11.538+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:46:11.538+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:46:11.560+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:46:11.559+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:46:11.582+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.110 seconds
+[2026-05-11T10:46:42.022+0000] {processor.py:161} INFO - Started process (PID=398) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:46:42.023+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:46:42.042+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:46:42.042+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:46:42.077+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:46:42.108+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:46:42.107+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:46:42.131+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:46:42.131+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:46:42.166+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.154 seconds
+[2026-05-11T10:47:12.575+0000] {processor.py:161} INFO - Started process (PID=420) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:47:12.576+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:47:12.579+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:47:12.579+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:47:12.626+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:47:12.657+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:47:12.657+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:47:12.677+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:47:12.677+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:47:12.699+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.130 seconds
+[2026-05-11T10:47:43.226+0000] {processor.py:161} INFO - Started process (PID=436) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:47:43.228+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:47:43.230+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:47:43.230+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:47:43.257+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:47:43.289+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:47:43.288+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:47:43.310+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:47:43.310+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:47:43.334+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.114 seconds
+[2026-05-11T10:48:13.738+0000] {processor.py:161} INFO - Started process (PID=446) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:48:13.740+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:48:13.742+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:48:13.742+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:48:13.788+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:48:13.820+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:48:13.819+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:48:13.840+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:48:13.840+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:48:13.859+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.127 seconds
+[2026-05-11T10:50:18.227+0000] {processor.py:161} INFO - Started process (PID=341) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:50:18.229+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:50:18.231+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:50:18.230+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:50:18.263+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:50:18.401+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:50:18.400+0000] {override.py:1829} INFO - Created Permission View: can delete on DAG:ingest_pipeline
+[2026-05-11T10:50:18.413+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:50:18.413+0000] {override.py:1829} INFO - Created Permission View: can read on DAG:ingest_pipeline
+[2026-05-11T10:50:18.422+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:50:18.422+0000] {override.py:1829} INFO - Created Permission View: can edit on DAG:ingest_pipeline
+[2026-05-11T10:50:18.423+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:50:18.423+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:50:18.434+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:50:18.434+0000] {dag.py:3118} INFO - Creating ORM DAG for ingest_pipeline
+[2026-05-11T10:50:18.447+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:50:18.447+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:50:18.474+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.254 seconds
+[2026-05-11T10:50:48.687+0000] {processor.py:161} INFO - Started process (PID=382) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:50:48.688+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:50:48.694+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:50:48.691+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:50:48.736+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:50:48.770+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:50:48.769+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:50:48.794+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:50:48.794+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:50:48.819+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.141 seconds
+[2026-05-11T10:51:19.249+0000] {processor.py:161} INFO - Started process (PID=393) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:51:19.250+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:51:19.253+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:51:19.252+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:51:19.284+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:51:19.319+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:51:19.319+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:51:19.346+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:51:19.346+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:51:19.384+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.144 seconds
+[2026-05-11T10:51:49.801+0000] {processor.py:161} INFO - Started process (PID=415) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:51:49.804+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:51:49.806+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:51:49.806+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:51:49.841+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:51:49.873+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:51:49.873+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:51:49.899+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:51:49.899+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:51:49.925+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.131 seconds
+[2026-05-11T10:52:20.379+0000] {processor.py:161} INFO - Started process (PID=425) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:52:20.381+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:52:20.384+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:52:20.383+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:52:20.411+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:52:20.441+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:52:20.441+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:52:20.462+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:52:20.461+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:52:20.501+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.131 seconds
+[2026-05-11T10:52:50.973+0000] {processor.py:161} INFO - Started process (PID=447) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:52:50.976+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:52:50.980+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:52:50.979+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:52:51.037+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:52:51.072+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:52:51.072+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:52:51.098+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:52:51.098+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:52:51.142+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.178 seconds
+[2026-05-11T10:53:21.503+0000] {processor.py:161} INFO - Started process (PID=485) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:53:21.506+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:53:21.511+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:53:21.511+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:53:21.563+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:53:21.618+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:53:21.617+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:53:21.653+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:53:21.652+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:53:21.689+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.205 seconds
+[2026-05-11T10:53:51.980+0000] {processor.py:161} INFO - Started process (PID=495) to work on /opt/airflow/dags/ingest.py
+[2026-05-11T10:53:51.981+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/ingest.py for tasks to queue
+[2026-05-11T10:53:51.983+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:53:51.983+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/ingest.py
+[2026-05-11T10:53:52.015+0000] {processor.py:840} INFO - DAG(s) 'ingest_pipeline' retrieved from /opt/airflow/dags/ingest.py
+[2026-05-11T10:53:52.055+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:53:52.055+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2026-05-11T10:53:52.079+0000] {logging_mixin.py:188} INFO - [2026-05-11T10:53:52.078+0000] {dag.py:3954} INFO - Setting next_dagrun for ingest_pipeline to 2026-05-10 00:00:00+00:00, run_after=2026-05-11 00:00:00+00:00
+[2026-05-11T10:53:52.110+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/ingest.py took 0.139 seconds
