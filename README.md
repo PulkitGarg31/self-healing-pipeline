@@ -158,7 +158,3 @@ docker-compose exec --user airflow airflow python -m pytest /opt/airflow/tests/t
 | No alerting on failures | Add email/Slack alerts via Airflow callbacks |
 
 ---
-
-## Resume Bullet
-
-*Built a self-healing Airflow pipeline using a locally hosted LLM (LLaMA 3.2 via Ollama) to autonomously diagnose schema drift, generate fixes, and retry failed ingestion jobs — validated with 10 automated tests and monitored via a real-time Streamlit dashboard.*
