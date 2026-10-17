@@ -32,5 +32,5 @@ def test_db_settings_have_no_default_password(monkeypatch):
     monkeypatch.setenv("POSTGRES_DB", "db1")
     monkeypatch.setenv("POSTGRES_USER", "user1")
     monkeypatch.delenv("POSTGRES_PASSWORD", raising=False)
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match="POSTGRES_PASSWORD"):
         config.db_settings()

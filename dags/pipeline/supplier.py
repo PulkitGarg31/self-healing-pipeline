@@ -53,9 +53,13 @@ def write_supplier_file(folder: Path, kind: str = "random", rng: random.Random |
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
     path = folder / f"supplier_{stamp}_{uuid.uuid4().hex[:6]}_{kind}.csv"
     temp = path.with_suffix(".tmp")
-    with open(temp, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f, delimiter=separator)
-        writer.writerow(header)
-        writer.writerows(rows)
-    temp.replace(path)
+    try:
+        with open(temp, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f, delimiter=separator)
+            writer.writerow(header)
+            writer.writerows(rows)
+        temp.replace(path)
+    except BaseException:
+        temp.unlink(missing_ok=True)
+        raise
     return path, kind

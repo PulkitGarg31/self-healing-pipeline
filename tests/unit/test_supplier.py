@@ -49,8 +49,9 @@ def test_bad_rows_file_has_three_bad_rows(tmp_path):
 
 
 def test_random_picks_a_known_kind(tmp_path):
-    _, kind = supplier.write_supplier_file(tmp_path, rng=random.Random(7))
+    path, kind = supplier.write_supplier_file(tmp_path, rng=random.Random(7))
     assert kind in supplier.KINDS
+    assert path.name.endswith(f"_{kind}.csv")
 
 
 def test_file_names_never_repeat(tmp_path):
@@ -62,6 +63,20 @@ def test_file_names_never_repeat(tmp_path):
 def test_no_temporary_file_is_left(tmp_path):
     supplier.write_supplier_file(tmp_path, kind="clean")
     assert list(tmp_path.glob("*.tmp")) == []
+
+
+def test_failed_write_leaves_no_file(tmp_path, monkeypatch):
+    class BrokenWriter:
+        def writerow(self, row):
+            raise OSError("disk full")
+
+        def writerows(self, rows):
+            raise OSError("disk full")
+
+    monkeypatch.setattr(supplier.csv, "writer", lambda *args, **kwargs: BrokenWriter())
+    with pytest.raises(OSError, match="disk full"):
+        supplier.write_supplier_file(tmp_path, kind="clean")
+    assert list(tmp_path.glob("*")) == []
 
 
 def test_unknown_kind_is_an_error(tmp_path):
