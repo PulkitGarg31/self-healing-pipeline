@@ -13,7 +13,13 @@ from pipeline import quality
     (["Asha", "30", " "], "city is empty"),
     (["Asha"], "age is not a whole number: ''"),
     (["Asha", "²", "Delhi"], "age is not a whole number: '²'"),
-    (["Asha", "9" * 5000, "Delhi"], "age out of range 0-120: 9999999999"),
+    (["Asha", "9" * 5000, "Delhi"], "age has more than 3 digits: 9999999999"),
+    (["a" * 100, "30", "Delhi"], None),
+    (["a" * 101, "30", "Delhi"], "name longer than 100 characters"),
+    (["Asha", "30", "a" * 101], "city longer than 100 characters"),
+    (["As\x00ha", "30", "Delhi"], "name or city contains a NUL character"),
+    (["Asha", "0030", "Delhi"], "age has more than 3 digits: 0030"),
+    (["Asha", "121", "Delhi"], "age out of range 0-120: 121"),
 ])
 def test_check_row(row, reason):
     assert quality.check_row(row) == reason
@@ -48,3 +54,10 @@ def test_rejected_rows_round_trip(tmp_path):
     rows = [quality.Rejected("a.csv", ["", "41", "Pune"], "name is empty")]
     quality.write_rejected(rows, tmp_path / "rejected.csv")
     assert quality.read_rejected(tmp_path / "rejected.csv") == rows
+
+
+def test_empty_files_read_as_no_rows(tmp_path):
+    (tmp_path / "good.csv").write_bytes(b"")
+    (tmp_path / "rejected.csv").write_bytes(b"")
+    assert quality.read_good(tmp_path / "good.csv") == []
+    assert quality.read_rejected(tmp_path / "rejected.csv") == []
