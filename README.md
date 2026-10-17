@@ -19,7 +19,8 @@ ingest_pipeline:  validate_schema >> quality_checks >> ingest_data >> transform_
 ```
 
 - `supplier_dag` pretends to be the company that sends the data. Every 2 minutes it drops one
-  file. It is not part of the pipeline.
+  file. `supplier_on_demand` drops one file when a dashboard button asks for it. Neither is part of
+  the pipeline.
 - `ingest_pipeline` starts a few seconds after a file lands (Airflow Datasets), so there is no
   fixed daily schedule.
 
@@ -76,9 +77,19 @@ The AI only chooses which column is which. It never changes a value.
 
 ## Dashboard
 
-http://localhost:8501 refreshes every 5 seconds. It shows the last run's status, runs over time
-(failed runs in red), failed runs with the reason, repairs by rules vs AI with each mapping,
-rejected rows and users by city.
+http://localhost:8501 is built for demos and refreshes every 5 seconds.
+
+- **Sidebar:** buttons that send one test file of each kind (clean, pipes and extra column,
+  reordered, renamed, bad rows), a switch for the automatic file every 2 minutes, and the
+  pipeline's health numbers.
+- **File story:** for the latest file (or one you pick), what arrived, what was wrong, how it was
+  repaired (rules or LLaMA 3.2, with what the AI said), and how many rows were saved or set aside.
+- **Recent files:** one line per file with its result. "View" opens its story.
+- Folded at the bottom: rows set aside with the reason, and users by city.
+
+The buttons use Airflow's REST API with the login in `.env` (`AIRFLOW_DASHBOARD_USER`,
+`AIRFLOW_DASHBOARD_PASSWORD`). They trigger `supplier_on_demand`, so they work even while the
+automatic supplier is switched off.
 
 ## Run it
 
@@ -86,28 +97,32 @@ Needs Docker Desktop and Ollama.
 
 ```bash
 ollama pull llama3.2
-cp .env.example .env        # then set your own password in .env
+cp .env.example .env        # then set your own passwords in .env
 docker compose up -d
 ```
 
 About `.env`:
-- Use only letters, digits, `-` and `_` in the password (it goes into a database URL).
+- Use only letters, digits, `-` and `_` in the passwords (the database one goes into a database URL).
 - Keep the file UTF-8. `cp` or `Copy-Item` is fine; `>` in Windows PowerShell 5.1 writes UTF-16.
 - The database keeps the password it was created with. To change it later, run
   `docker compose down -v`, which also deletes the stored data.
+- `AIRFLOW_DASHBOARD_PASSWORD` is set the first time Airflow starts. To change it later, delete the
+  `dashboard` user in Airflow (or run `docker compose down -v`) and start again.
 
 Then:
 - Airflow: http://localhost:8080 (user `admin`; the password is printed in `docker compose logs airflow`)
 - Dashboard: http://localhost:8501
 
-Both DAGs start unpaused, so a file arrives every 2 minutes. To show one case on demand:
+All three DAGs start unpaused, so a file arrives every 2 minutes. To show one case on demand, use
+a dashboard button or run:
 
 ```bash
-docker compose exec airflow airflow dags trigger supplier_dag --conf '{"kind": "renamed"}'
+docker compose exec airflow airflow dags trigger supplier_on_demand --conf '{"kind": "renamed"}'
 ```
 
-Kinds: `clean`, `pipe_extra_column`, `reordered`, `renamed`, `bad_rows`. Pause `supplier_dag` in
-Airflow to stop new files. To retry a failed run, clear the whole run in Airflow.
+Kinds: `clean`, `pipe_extra_column`, `reordered`, `renamed`, `bad_rows`. To stop the automatic
+files, turn off the dashboard's switch or pause `supplier_dag` in Airflow. To retry a failed run,
+clear the whole run in Airflow.
 To fix a file by hand, edit it in `data/failed/<run>/raw/` and then clear the whole run.
 
 ## Tests
@@ -124,14 +139,16 @@ The live LLaMA test runs inside the container. To run it on your own machine, se
 | `tests/unit` | settings, supplier, run folders, schema, healer (with a fake AI, including bad answers), quality checks, Ollama client |
 | `tests/integration/test_healer_live.py` | real LLaMA 3.2 maps renamed columns (skipped if Ollama is down) |
 | `tests/integration/test_ingest.py` | one-transaction loading, no double loads, run log, upgrade of an older database (each test in its own throwaway schema; skipped without Postgres) |
-| `tests/integration/test_dags.py` | 4 tasks linked in order, retries, callbacks, Dataset trigger (skipped without Airflow) |
+| `tests/integration/test_dags.py` | 4 tasks linked in order, retries, callbacks, Dataset trigger, on-demand supplier (skipped without Airflow) |
+
+The dashboard's helpers are tested in `tests/unit/test_view_data.py` and `tests/unit/test_airflow_api.py`.
 
 ## Limits
 
 - Near real-time, not streaming: a file is handled a few seconds after it lands.
-- Here the Dataset is updated by the `supplier_dag` task that drops the file. With a real outside
-  supplier, the pipeline would need a sensor, a cloud storage event or a call to Airflow's REST
-  API to start.
+- Here the Dataset is updated by the `drop_file` task in `supplier_dag` or `supplier_on_demand`.
+  With a real outside supplier, the pipeline would need a sensor, a cloud storage event or a call
+  to Airflow's REST API to start.
 - Demo-size data (3 to 5 rows per file) on one machine (LocalExecutor).
 - If the name and city columns are both renamed, the checks cannot prove which is which, because
   both hold text. The AI is asked to judge by the values, and its answer is logged for review.

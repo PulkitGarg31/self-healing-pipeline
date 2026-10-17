@@ -29,6 +29,12 @@ services:
       AIRFLOW__WEBSERVER__LOG_FETCH_TIMEOUT_SEC: '5'
       AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT: '120'
       PIPELINE_DATA_DIR: /opt/airflow/data
+      AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
+      _AIRFLOW_DB_MIGRATE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_DASHBOARD_USER}
+      _AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_DASHBOARD_PASSWORD}
+      _AIRFLOW_WWW_USER_ROLE: User
       _PIP_ADDITIONAL_REQUIREMENTS: 'dbt-postgres==1.7.0 pytest==8.3.3'
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -40,6 +46,7 @@ services:
       - ./tests:/opt/airflow/tests
       - ./pytest.ini:/opt/airflow/pytest.ini
       - ./data:/opt/airflow/data
+      - ./dashboard:/opt/airflow/dashboard:ro
     ports:
       - "8080:8080"
     command: standalone
@@ -59,8 +66,12 @@ services:
     env_file: .env
     ports:
       - "8501:8501"
+    environment:
+      PIPELINE_DATA_DIR: /data
+      AIRFLOW_API_URL: http://airflow:8080/api/v1
     volumes:
       - ./dashboard:/app
+      - ./data:/data:ro
     working_dir: /app
     command: >
       bash -c "pip install --quiet -r requirements.txt &&
