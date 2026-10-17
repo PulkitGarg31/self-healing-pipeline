@@ -6,7 +6,8 @@ from pathlib import Path
 
 def run_folder_name(run_id: str) -> str:
     """Airflow run ids contain ':' and '+', which are not safe in folder names."""
-    return re.sub(r"[^A-Za-z0-9_.-]", "_", run_id)
+    name = re.sub(r"[^A-Za-z0-9_.-]", "_", run_id)
+    return name if name.strip(".") else name.replace(".", "_")
 
 
 def run_dir(data_dir: Path, run_id: str) -> Path:
@@ -17,34 +18,53 @@ def raw_files(data_dir: Path, run_id: str) -> list[Path]:
     return sorted((run_dir(data_dir, run_id) / "raw").glob("*.csv"))
 
 
-def claim_incoming(data_dir: Path, run_id: str) -> list[Path]:
-    """Move every waiting CSV into this run's raw/ folder and return the new paths.
+def _unique(path: Path) -> Path:
+    """Return path, or path__2, path__3, ... if it already exists, so an archive is never overwritten."""
+    candidate, number = path, 2
+    while candidate.exists():
+        candidate = path.with_name(f"{path.name}__{number}")
+        number += 1
+    return candidate
 
-    On a retry the run already owns files, so return those instead of claiming new ones.
+
+def claim_incoming(data_dir: Path, run_id: str) -> list[Path]:
+    """Move this run's files into its raw/ folder and return their paths.
+
+    On a retry the run already owns files, so return those. If the run failed before and was
+    cleared in Airflow, take back its own files from failed/ first. Otherwise claim every waiting CSV.
     """
     already_claimed = raw_files(data_dir, run_id)
     if already_claimed:
         return already_claimed
-    waiting = sorted((data_dir / "incoming").glob("*.csv"))
+    failed_raw = data_dir / "failed" / run_folder_name(run_id) / "raw"
+    waiting = sorted(failed_raw.glob("*.csv")) or sorted((data_dir / "incoming").glob("*.csv"))
     if not waiting:
         return []
     target_dir = run_dir(data_dir, run_id) / "raw"
     target_dir.mkdir(parents=True, exist_ok=True)
     for path in waiting:
-        path.replace(target_dir / path.name)
+        try:
+            path.replace(target_dir / path.name)
+        except FileNotFoundError:
+            continue  # another process took it between the listing and the move
     return raw_files(data_dir, run_id)
 
 
 def finish_run(data_dir: Path, run_id: str, outcome: str) -> Path | None:
-    """Move processing/<run> to processed/<run> or failed/<run>. Returns None if there is nothing to move."""
+    """Move this run's folder to processed/ or failed/. Returns None if there is nothing to move.
+
+    An existing archive with the same name is kept: the new one gets a __2, __3, ... suffix.
+    """
     if outcome not in ("processed", "failed"):
         raise ValueError(f"outcome must be 'processed' or 'failed', got {outcome!r}")
+    name = run_folder_name(run_id)
     source = run_dir(data_dir, run_id)
+    if not source.exists() and outcome == "processed":
+        # The run failed, was cleared in Airflow and then passed: its folder is already in failed/.
+        source = data_dir / "failed" / name
     if not source.exists():
         return None
-    target = data_dir / outcome / run_folder_name(run_id)
+    target = _unique(data_dir / outcome / name)
     target.parent.mkdir(parents=True, exist_ok=True)
-    if target.exists():
-        shutil.rmtree(target)
     shutil.move(str(source), str(target))
     return target

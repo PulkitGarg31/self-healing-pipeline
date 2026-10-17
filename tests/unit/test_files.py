@@ -64,3 +64,46 @@ def test_finish_run_without_a_folder(tmp_path):
 def test_finish_run_rejects_unknown_outcome(tmp_path):
     with pytest.raises(ValueError):
         files.finish_run(tmp_path, RUN, "lost")
+
+
+def test_dot_run_ids_are_made_safe():
+    assert files.run_folder_name(".") == "_"
+    assert files.run_folder_name("..") == "__"
+
+
+def test_finish_run_never_overwrites_an_archive(tmp_path):
+    name = files.run_folder_name(RUN)
+    drop(tmp_path, "a.csv")
+    files.claim_incoming(tmp_path, RUN)
+    first = files.finish_run(tmp_path, RUN, "failed")
+    assert (tmp_path / "failed" / name / "raw" / "a.csv").exists()
+    # The run is cleared in Airflow: it takes a.csv back and fails again.
+    files.claim_incoming(tmp_path, RUN)
+    second = files.finish_run(tmp_path, RUN, "failed")
+    assert first == tmp_path / "failed" / name
+    assert second == tmp_path / "failed" / f"{name}__2"
+    assert (second / "raw" / "a.csv").exists()
+    assert first.exists()
+    assert list((first / "raw").glob("*.csv")) == []
+    csv_names = [p.name for p in tmp_path.rglob("*.csv")]
+    assert csv_names.count("a.csv") == 1
+
+
+def test_cleared_failed_run_takes_back_its_own_files(tmp_path):
+    drop(tmp_path, "orig.csv")
+    files.claim_incoming(tmp_path, RUN)
+    files.finish_run(tmp_path, RUN, "failed")
+    drop(tmp_path, "new.csv")
+    claimed = files.claim_incoming(tmp_path, RUN)
+    assert [p.name for p in claimed] == ["orig.csv"]
+    assert (tmp_path / "incoming" / "new.csv").exists()
+
+
+def test_run_cleared_after_failing_late_is_archived_as_processed(tmp_path):
+    drop(tmp_path, "a.csv")
+    files.claim_incoming(tmp_path, RUN)
+    files.finish_run(tmp_path, RUN, "failed")
+    moved = files.finish_run(tmp_path, RUN, "processed")
+    assert moved == tmp_path / "processed" / files.run_folder_name(RUN)
+    assert (moved / "raw" / "a.csv").exists()
+    assert not (tmp_path / "failed" / files.run_folder_name(RUN)).exists()
