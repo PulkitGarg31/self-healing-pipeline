@@ -158,6 +158,32 @@ def test_duplicate_columns_fail_without_asking_the_ai(tmp_path):
     assert not out.exists()
 
 
+def test_rules_ignore_empty_spare_columns(tmp_path):
+    out = tmp_path / "out.csv"
+    result = healer.heal_file(write(tmp_path, "name,age,city,,\nAsha,30,Delhi,,\n"), out, FakeLLM(GOOD_ANSWER))
+    assert result.success is True
+    assert result.method == "rules"
+    assert read(out) == [["name", "age", "city"], ["Asha", "30", "Delhi"]]
+
+
+def test_rules_ignore_an_unused_repeated_column(tmp_path):
+    out = tmp_path / "out.csv"
+    result = healer.heal_file(write(tmp_path, "name,age,city,note,note\nAsha,30,Delhi,a,b\n"), out, FakeLLM(GOOD_ANSWER))
+    assert result.success is True
+    assert result.method == "rules"
+    assert read(out) == [["name", "age", "city"], ["Asha", "30", "Delhi"]]
+
+
+def test_ai_cannot_use_a_repeated_column(tmp_path):
+    out = tmp_path / "out.csv"
+    text = "full_name,years,town,town\nAsha,30,Delhi,Goa\n"
+    answer = {"mapping": {"name": "full_name", "age": "years", "city": "town"}}
+    result = healer.heal_file(write(tmp_path, text), out, FakeLLM(answer))
+    assert result.success is False
+    assert "appears more than once" in result.error_message
+    assert not out.exists()
+
+
 def test_non_dict_ai_answer_is_kept_for_the_log(tmp_path):
     result = healer.heal_file(write(tmp_path, RENAMED), tmp_path / "out.csv", FakeLLM(["oops"]))
     assert result.success is False

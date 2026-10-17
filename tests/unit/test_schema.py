@@ -29,6 +29,21 @@ def test_detect_separator(sample, expected):
     assert schema.detect_separator(sample) == expected
 
 
+@pytest.mark.parametrize("value, expected", [
+    ("30", True),
+    (" 7 ", True),
+    ("0", True),
+    ("120", True),
+    ("121", False),
+    ("abc", False),
+    ("", False),
+    ("²", False),
+    ("9" * 5000, False),
+])
+def test_is_age(value, expected):
+    assert schema.is_age(value) is expected
+
+
 def test_read_raw_cleans_the_header(tmp_path):
     raw = schema.read_raw(write(tmp_path, " Name ,AGE,City\nAsha,30,Delhi\n"))
     assert raw.header == ["name", "age", "city"]

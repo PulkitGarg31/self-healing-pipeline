@@ -19,6 +19,12 @@ def clean_name(name: str) -> str:
     return name.strip().lower()
 
 
+def is_age(value: str) -> bool:
+    """A whole number from 0 to 120. The healer and the quality checks both use this rule."""
+    value = value.strip()
+    return value.isdecimal() and len(value) <= 3 and int(value) <= 120
+
+
 def detect_separator(sample: str) -> str:
     try:
         return csv.Sniffer().sniff(sample, delimiters=SEPARATORS).delimiter

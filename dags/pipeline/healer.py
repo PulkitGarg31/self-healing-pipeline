@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Callable
 
 from pipeline.config import EXPECTED_COLUMNS
-from pipeline.schema import RawFile, apply_mapping, clean_name, describe_drift, is_clean, read_raw
+from pipeline.schema import RawFile, apply_mapping, clean_name, describe_drift, is_age, is_clean, read_raw
 
 # ask_llm(columns, sample_rows) returns the AI's answer, already parsed from JSON.
 AskLLM = Callable[[list[str], list[list[str]]], dict]
@@ -21,12 +21,6 @@ class HealResult:
     mapping: dict | None = None
     llm_diagnosis: object = None  # the AI's answer exactly as returned, kept for the repair log
     error_message: str | None = None
-
-
-def is_age(value: str) -> bool:
-    """A whole number from 0 to 120. The quality checks use the same rule."""
-    value = value.strip()
-    return value.isdecimal() and 0 <= int(value) <= 120
 
 
 def rules_mapping(raw: RawFile) -> dict | None:
@@ -48,6 +42,9 @@ def check_llm_mapping(answer, raw: RawFile) -> dict:
     for col, source in mapping.items():
         if source not in raw.header:
             raise ValueError(f"AI mapped '{col}' to '{source}', which is not a column in the file")
+    for col, source in mapping.items():
+        if raw.header.count(source) > 1:
+            raise ValueError(f"AI mapped '{col}' to '{source}', which appears more than once in the file")
     if len(set(mapping.values())) != len(mapping):
         raise ValueError("AI used the same column twice")
     for col in EXPECTED_COLUMNS:
@@ -75,7 +72,7 @@ def heal_file(raw_path: Path, out_path: Path, ask_llm: AskLLM) -> HealResult:
         return HealResult(name, healed=True, success=False, method=None,
                           drift_type="unreadable file", error_message=f"{type(exc).__name__}: {exc}")
 
-    duplicates = sorted({col for col in raw.header if raw.header.count(col) > 1})
+    duplicates = [col for col in EXPECTED_COLUMNS if raw.header.count(col) > 1]
     if duplicates:
         return HealResult(name, healed=True, success=False, method=None,
                           drift_type="duplicate columns: " + ", ".join(duplicates),
