@@ -78,7 +78,7 @@ def test_old_database_is_upgraded(conn):
     run_id = f"test-{uuid.uuid4()}"
     assert db.load_rows(conn, run_id, [("a.csv", ["Asha", "30", "Delhi"])], []) == (1, 0, [])
     now = datetime.now(timezone.utc)
-    db.write_run_log(conn, run_id, "failed", now, now, failed_task="run_dbt", error_message="boom")
+    db.write_run_log(conn, run_id, "failed", now, now, failed_task="transform_data", error_message="boom")
     db.write_run_log(conn, run_id, "success", now, now, rows_loaded=1)
     db.log_heal(conn, run_id, HealResult("a.csv", healed=True, success=True, method="rules", drift_type="separator ';'"))
     assert count(conn, "raw_users", run_id) == 1

@@ -4,5 +4,6 @@ __pycache__/
 .pytest_cache/
 dbt_project/target/
 dbt_project/logs/
+dbt_project/.user.yml
 .env
 data/

@@ -108,6 +108,7 @@ docker compose exec airflow airflow dags trigger supplier_dag --conf '{"kind": "
 
 Kinds: `clean`, `pipe_extra_column`, `reordered`, `renamed`, `bad_rows`. Pause `supplier_dag` in
 Airflow to stop new files. To retry a failed run, clear the whole run in Airflow.
+To fix a file by hand, edit it in `data/failed/<run>/raw/` and then clear the whole run.
 
 ## Tests
 
@@ -115,6 +116,8 @@ Airflow to stop new files. To retry a failed run, clear the whole run in Airflow
 python -m pytest tests/unit                               # no services needed (Python 3.10+, pytest, requests)
 docker compose exec airflow python -m pytest -v           # everything, inside the container
 ```
+
+The live LLaMA test runs inside the container. To run it on your own machine, set `OLLAMA_URL=http://localhost:11434/api/generate` first.
 
 | Group | Covers |
 |---|---|
@@ -133,3 +136,5 @@ docker compose exec airflow python -m pytest -v           # everything, inside t
 - If the name and city columns are both renamed, the checks cannot prove which is which, because
   both hold text. The AI is asked to judge by the values, and its answer is logged for review.
 - Files are matched by name, so a new file with the name of one already loaded is skipped.
+- One file that cannot be repaired fails its whole run, including good files picked up with it.
+  They stay in `data/failed/<run>/` until the run is cleared.

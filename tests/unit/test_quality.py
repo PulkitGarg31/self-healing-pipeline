@@ -56,6 +56,14 @@ def test_rejected_rows_round_trip(tmp_path):
     assert quality.read_rejected(tmp_path / "rejected.csv") == rows
 
 
+def test_long_rejected_row_round_trips_shortened(tmp_path):
+    rows = [quality.Rejected("a.csv", ["अ" * 25000, "30", "Delhi"], "name longer than 100 characters")]
+    quality.write_rejected(rows, tmp_path / "rejected.csv")
+    [stored] = quality.read_rejected(tmp_path / "rejected.csv")
+    assert stored.row == ["अ" * 200, "30", "Delhi"]
+    assert len(stored.row[0]) == 200
+
+
 def test_empty_files_read_as_no_rows(tmp_path):
     (tmp_path / "good.csv").write_bytes(b"")
     (tmp_path / "rejected.csv").write_bytes(b"")

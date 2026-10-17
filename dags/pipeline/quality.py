@@ -75,7 +75,8 @@ def write_rejected(rows: list[Rejected], path: Path) -> None:
         writer = csv.writer(f)
         writer.writerow(["source_file", "row", "reason"])
         for item in rows:
-            writer.writerow([item.source_file, json.dumps(item.row), item.reason])
+            stored = json.dumps([cell[:200] for cell in item.row], ensure_ascii=False)
+            writer.writerow([item.source_file, stored, item.reason])
 
 
 def read_rejected(path: Path) -> list[Rejected]:
