@@ -31,16 +31,22 @@ def claim_incoming(data_dir: Path, run_id: str) -> list[Path]:
     """Move this run's files into its raw/ folder and return their paths.
 
     On a retry the run already owns files, so return those. If the run failed before and was
-    cleared in Airflow, take back its own files from failed/ first. Otherwise claim every waiting CSV.
+    cleared in Airflow, bring its whole folder back from failed/ and retry the same files.
+    Otherwise claim every waiting CSV.
     """
     already_claimed = raw_files(data_dir, run_id)
     if already_claimed:
         return already_claimed
-    failed_raw = data_dir / "failed" / run_folder_name(run_id) / "raw"
-    waiting = sorted(failed_raw.glob("*.csv")) or sorted((data_dir / "incoming").glob("*.csv"))
+    folder = run_dir(data_dir, run_id)
+    failed_folder = data_dir / "failed" / run_folder_name(run_id)
+    if not folder.exists() and any((failed_folder / "raw").glob("*.csv")):
+        folder.parent.mkdir(parents=True, exist_ok=True)
+        failed_folder.replace(folder)
+        return raw_files(data_dir, run_id)
+    waiting = sorted((data_dir / "incoming").glob("*.csv"))
     if not waiting:
         return []
-    target_dir = run_dir(data_dir, run_id) / "raw"
+    target_dir = folder / "raw"
     target_dir.mkdir(parents=True, exist_ok=True)
     for path in waiting:
         try:
@@ -61,7 +67,9 @@ def finish_run(data_dir: Path, run_id: str, outcome: str) -> Path | None:
     source = run_dir(data_dir, run_id)
     if not source.exists() and outcome == "processed":
         # The run failed, was cleared in Airflow and then passed: its folder is already in failed/.
-        source = data_dir / "failed" / name
+        failed_folder = data_dir / "failed" / name
+        if any((failed_folder / "raw").glob("*.csv")):
+            source = failed_folder
     if not source.exists():
         return None
     target = _unique(data_dir / outcome / name)

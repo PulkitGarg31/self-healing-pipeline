@@ -1,3 +1,5 @@
+import pathlib
+
 import pytest
 
 from pipeline import files
@@ -73,20 +75,17 @@ def test_dot_run_ids_are_made_safe():
 
 def test_finish_run_never_overwrites_an_archive(tmp_path):
     name = files.run_folder_name(RUN)
-    drop(tmp_path, "a.csv")
-    files.claim_incoming(tmp_path, RUN)
-    first = files.finish_run(tmp_path, RUN, "failed")
-    assert (tmp_path / "failed" / name / "raw" / "a.csv").exists()
-    # The run is cleared in Airflow: it takes a.csv back and fails again.
-    files.claim_incoming(tmp_path, RUN)
-    second = files.finish_run(tmp_path, RUN, "failed")
-    assert first == tmp_path / "failed" / name
-    assert second == tmp_path / "failed" / f"{name}__2"
-    assert (second / "raw" / "a.csv").exists()
-    assert first.exists()
-    assert list((first / "raw").glob("*.csv")) == []
-    csv_names = [p.name for p in tmp_path.rglob("*.csv")]
-    assert csv_names.count("a.csv") == 1
+    old = tmp_path / "failed" / name / "raw" / "old.csv"
+    old.parent.mkdir(parents=True)
+    old.write_text("name,age,city\n", encoding="utf-8")
+    new = files.run_dir(tmp_path, RUN) / "raw" / "new.csv"
+    new.parent.mkdir(parents=True)
+    new.write_text("name,age,city\n", encoding="utf-8")
+    moved = files.finish_run(tmp_path, RUN, "failed")
+    assert moved.name == name + "__2"
+    assert moved.parent == tmp_path / "failed"
+    assert old.exists()
+    assert (moved / "raw" / "new.csv").exists()
 
 
 def test_cleared_failed_run_takes_back_its_own_files(tmp_path):
@@ -107,3 +106,32 @@ def test_run_cleared_after_failing_late_is_archived_as_processed(tmp_path):
     assert moved == tmp_path / "processed" / files.run_folder_name(RUN)
     assert (moved / "raw" / "a.csv").exists()
     assert not (tmp_path / "failed" / files.run_folder_name(RUN)).exists()
+
+
+def test_repeated_failures_keep_retrying_the_same_files(tmp_path):
+    drop(tmp_path, "orig.csv")
+    files.claim_incoming(tmp_path, RUN)
+    files.finish_run(tmp_path, RUN, "failed")
+    for attempt in range(2):  # clear in Airflow and fail again, twice
+        drop(tmp_path, f"new{attempt}.csv")
+        claimed = files.claim_incoming(tmp_path, RUN)
+        assert [p.name for p in claimed] == ["orig.csv"]
+        files.finish_run(tmp_path, RUN, "failed")
+    folder = files.run_folder_name(RUN)
+    assert (tmp_path / "failed" / folder / "raw" / "orig.csv").exists()
+    assert not (tmp_path / "failed" / (folder + "__2")).exists()
+
+
+def test_claim_skips_a_file_that_vanishes(tmp_path, monkeypatch):
+    real_replace = pathlib.Path.replace
+
+    def replace(self, target):
+        if self.name == "gone.csv":
+            raise FileNotFoundError(self)
+        return real_replace(self, target)
+
+    monkeypatch.setattr(pathlib.Path, "replace", replace)
+    drop(tmp_path, "a.csv")
+    drop(tmp_path, "gone.csv")
+    claimed = files.claim_incoming(tmp_path, RUN)
+    assert [p.name for p in claimed] == ["a.csv"]
