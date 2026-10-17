@@ -40,6 +40,18 @@ def test_read_raw_skips_blank_lines(tmp_path):
     assert raw.rows == [["Asha", "30", "Delhi"]]
 
 
+def test_read_raw_drops_an_excel_byte_order_mark(tmp_path):
+    raw = schema.read_raw(write(tmp_path, "﻿name,age,city\nAsha,30,Delhi\n"))
+    assert raw.header == ["name", "age", "city"]
+    assert schema.is_clean(raw)
+
+
+def test_read_raw_skips_leading_blank_lines(tmp_path):
+    raw = schema.read_raw(write(tmp_path, "\n\nname,age,city\nAsha,30,Delhi\n"))
+    assert raw.header == ["name", "age", "city"]
+    assert raw.rows == [["Asha", "30", "Delhi"]]
+
+
 def test_empty_file_is_an_error(tmp_path):
     with pytest.raises(ValueError, match="empty"):
         schema.read_raw(write(tmp_path, "  \n"))

@@ -88,7 +88,8 @@ def test_ai_answer_in_capital_letters_is_accepted(tmp_path):
     ({"mapping": {"name": "full_name", "age": "years"}}, "must have the keys"),
     ({"mapping": {"name": "full_name", "age": "years", "city": "country"}}, "not a column"),
     ({"mapping": {"name": "full_name", "age": "years", "city": "full_name"}}, "same column twice"),
-    ({"mapping": {"name": "full_name", "age": "town", "city": "years"}}, "not numbers"),
+    ({"mapping": {"name": "full_name", "age": "town", "city": "years"}}, "not ages"),
+    ({"mapping": {"name": "full_name", "NAME ": "town", "age": "years", "city": "full_name"}}, "repeats a key"),
 ])
 def test_bad_ai_answers_are_rejected(tmp_path, answer, message):
     out = tmp_path / "out.csv"
@@ -112,3 +113,69 @@ def test_empty_file_fails_safely(tmp_path):
     assert result.success is False
     assert result.drift_type == "unreadable file"
     assert "empty" in result.error_message
+
+
+def test_ai_cannot_move_a_column_that_kept_its_name(tmp_path):
+    text = "name,age,town\nAsha,30,Delhi\nRavi,41,Pune\n"
+    out = tmp_path / "out.csv"
+    swap = {"mapping": {"name": "town", "age": "age", "city": "name"}}
+    result = healer.heal_file(write(tmp_path, text), out, FakeLLM(swap))
+    assert result.success is False
+    assert "already has a 'name' column" in result.error_message
+    assert not out.exists()
+
+    right = {"mapping": {"name": "name", "age": "age", "city": "town"}}
+    result = healer.heal_file(write(tmp_path, text), out, FakeLLM(right))
+    assert result.success is True
+    assert result.method == "llm"
+    assert read(out)[1] == ["Asha", "30", "Delhi"]
+
+
+def test_header_only_file_cannot_check_the_ai(tmp_path):
+    out = tmp_path / "out.csv"
+    result = healer.heal_file(write(tmp_path, "full_name,years,town\n"), out, FakeLLM(GOOD_ANSWER))
+    assert result.success is False
+    assert "no data rows" in result.error_message
+    assert not out.exists()
+
+
+def test_failed_repair_removes_an_old_output(tmp_path):
+    out = tmp_path / "out.csv"
+    out.write_text("old", encoding="utf-8")
+    result = healer.heal_file(write(tmp_path, RENAMED), out, FakeLLM(ConnectionError()))
+    assert result.success is False
+    assert result.error_message.startswith("ConnectionError")
+    assert not out.exists()
+
+
+def test_duplicate_columns_fail_without_asking_the_ai(tmp_path):
+    llm = FakeLLM(GOOD_ANSWER)
+    out = tmp_path / "out.csv"
+    result = healer.heal_file(write(tmp_path, "name,age,city,name\nAsha,30,Delhi,X\n"), out, llm)
+    assert result.success is False
+    assert result.drift_type == "duplicate columns: name"
+    assert llm.calls == []
+    assert not out.exists()
+
+
+def test_non_dict_ai_answer_is_kept_for_the_log(tmp_path):
+    result = healer.heal_file(write(tmp_path, RENAMED), tmp_path / "out.csv", FakeLLM(["oops"]))
+    assert result.success is False
+    assert result.llm_diagnosis == ["oops"]
+
+
+def test_broken_csv_is_unreadable(tmp_path):
+    # An unclosed quote makes one field longer than the csv module's field limit.
+    text = 'name,age,city\n"' + "x" * 140000
+    result = healer.heal_file(write(tmp_path, text), tmp_path / "out.csv", FakeLLM(GOOD_ANSWER))
+    assert result.success is False
+    assert result.drift_type == "unreadable file"
+
+
+def test_age_column_with_mostly_non_ages_is_rejected(tmp_path):
+    text = "full_name,years,town\nAsha,5,Delhi\nRavi,x,Pune\nSara,y,Goa\n"
+    out = tmp_path / "out.csv"
+    result = healer.heal_file(write(tmp_path, text), out, FakeLLM(GOOD_ANSWER))
+    assert result.success is False
+    assert "not ages" in result.error_message
+    assert not out.exists()

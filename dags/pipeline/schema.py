@@ -27,10 +27,12 @@ def detect_separator(sample: str) -> str:
 
 
 def read_raw(path: Path) -> RawFile:
-    text = path.read_text(encoding="utf-8")
+    text = path.read_text(encoding="utf-8-sig")
     if not text.strip():
         raise ValueError(f"{path.name} is empty")
     lines = text.splitlines()
+    while not lines[0].strip():
+        lines.pop(0)
     separator = detect_separator("\n".join(lines[:5]))
     reader = csv.reader(lines, delimiter=separator)
     header = [clean_name(name) for name in next(reader)]
