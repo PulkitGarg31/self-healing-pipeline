@@ -55,6 +55,11 @@ TABLE_SQL = [
 ]
 
 
+def _text(value):
+    """psycopg2 refuses NUL characters in strings; drop them from log text."""
+    return value.replace("\x00", "") if isinstance(value, str) else value
+
+
 def connect():
     return psycopg2.connect(**config.db_settings())
 
@@ -75,13 +80,13 @@ def log_heal(conn, run_id: str, result) -> None:
                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
             (
                 run_id,
-                result.source_file,
-                result.drift_type,
+                _text(result.source_file),
+                _text(result.drift_type),
                 result.method,
                 json.dumps(result.mapping) if result.mapping is not None else None,
                 json.dumps(result.llm_diagnosis) if result.llm_diagnosis is not None else None,
                 result.success,
-                result.error_message,
+                _text(result.error_message),
             ),
         )
     conn.commit()
@@ -142,6 +147,6 @@ def write_run_log(conn, run_id: str, status: str, started_at: datetime | None, f
                    failed_task = EXCLUDED.failed_task,
                    error_message = EXCLUDED.error_message""",
             (run_id, status, started_at, finished_at, files_processed, rows_loaded,
-             rows_rejected, heals, failed_task, error_message),
+             rows_rejected, heals, _text(failed_task), _text(error_message)),
         )
     conn.commit()
