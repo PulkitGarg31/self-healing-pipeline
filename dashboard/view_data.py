@@ -255,14 +255,6 @@ def ai_summary(mapping_json: str | None) -> str | None:
     return ", ".join(parts) or None
 
 
-def ai_said(answer_json: str | None) -> str | None:
-    """The AI's one-sentence description of the problem, or None."""
-    answer = _json(answer_json)
-    if isinstance(answer, dict) and isinstance(answer.get("problem"), str) and answer["problem"].strip():
-        return answer["problem"].strip()
-    return None
-
-
 def row_text(row_json: str | None) -> str:
     """A rejected row as 'Asha, abc, Delhi'. Empty cells show as (empty)."""
     if not row_json:

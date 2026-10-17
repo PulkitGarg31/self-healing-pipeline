@@ -133,7 +133,7 @@ def status_line(now: datetime) -> None:
 def file_card(story: view_data.FileStory, is_latest: bool, now: datetime) -> None:
     label, tone = view_data.result(story)
     with st.container(border=True):
-        title, result_col = st.columns([4, 1])
+        title, result_col = st.columns([3, 1.4])
         title.subheader(("Latest file: " if is_latest else "File: ")
                         + view_data.what_arrived(story.drift_type, story.rows_set_aside))
         result_col.markdown(chip(label, tone))
@@ -162,9 +162,13 @@ def file_card(story: view_data.FileStory, is_latest: bool, now: datetime) -> Non
                 st.write("Nothing from this file was loaded.")
 
         if story.method == "llm" and story.repaired_ok:
-            said = view_data.ai_said(story.llm_answer) or view_data.ai_summary(story.mapping)
-            if said:
-                st.info(f"AI said: {said}")
+            # Show the checked mapping, not the AI's free-text sentence, which is often vague or wrong.
+            matched = view_data.ai_summary(story.mapping)
+            if matched:
+                st.info(f"LLaMA 3.2 matched the columns: {matched}. The pipeline checked this before using it.")
+            if story.llm_answer:
+                with st.expander("Full AI answer"):
+                    st.code(story.llm_answer, language="json")
         if story.repaired_ok is False:
             reason = view_data.friendly_error(story.error_message)
             if story.rows_loaded or story.rows_set_aside:

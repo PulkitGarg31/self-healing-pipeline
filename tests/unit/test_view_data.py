@@ -123,15 +123,6 @@ def test_ai_summary_without_a_mapping(value):
     assert view_data.ai_summary(value) is None
 
 
-def test_ai_said():
-    assert view_data.ai_said('{"mapping": {}, "problem": " Columns were renamed. "}') == "Columns were renamed."
-
-
-@pytest.mark.parametrize("value", [None, "nope", '{"mapping": {}}', '"just text"', '{"problem": ""}'])
-def test_ai_said_without_a_problem(value):
-    assert view_data.ai_said(value) is None
-
-
 @pytest.mark.parametrize("value, expected", [
     ('["Asha", "abc", "Delhi"]', "Asha, abc, Delhi"),
     ('["", "30", "Pune"]', "(empty), 30, Pune"),
