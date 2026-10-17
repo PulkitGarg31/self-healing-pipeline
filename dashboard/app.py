@@ -98,9 +98,11 @@ def send(kind: str, label: str) -> None:
 
 
 def switch_automatic_files() -> None:
+    wanted = st.session_state["automatic_files"]
     try:
-        airflow_api.set_automatic_files(st.session_state["automatic_files"])
+        airflow_api.set_automatic_files(wanted)
     except airflow_api.ApiError as exc:
+        st.session_state["automatic_files"] = not wanted
         st.session_state["api_message"] = str(exc)
 
 
@@ -148,12 +150,14 @@ def file_card(story: view_data.FileStory, is_latest: bool, now: datetime) -> Non
             st.code("\n".join(lines) if lines else "The original file is not available.", language=None)
         with after:
             caption, table = view_data.after_rows(folder, story.source_file) if folder else ("After repair", [])
-            if caption == "What was loaded" and not story.rows_loaded:
+            if caption == "What was loaded" and not story.rows_loaded and len(table) > 1:
                 caption = "Passed the row checks (not loaded)"
             st.caption(caption)
             if len(table) > 1:
                 st.dataframe(pd.DataFrame(table[1:], columns=table[0]), hide_index=True,
                              use_container_width=True)
+            elif not folder and story.rows_loaded:
+                st.write("The repaired file is not available.")
             else:
                 st.write("Nothing from this file was loaded.")
 
@@ -230,8 +234,7 @@ with st.sidebar:
     if automatic is None:
         st.caption("Automatic files: Airflow is not reachable.")
     else:
-        if "automatic_files" not in st.session_state:
-            st.session_state["automatic_files"] = automatic
+        st.session_state["automatic_files"] = automatic  # Airflow's real state, so the switch never drifts
         st.toggle("Automatic file every 2 minutes", key="automatic_files", on_change=switch_automatic_files)
     if "api_message" in st.session_state:
         st.error(st.session_state.pop("api_message"))
