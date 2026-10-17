@@ -245,7 +245,12 @@ def main_view() -> None:
     stories = view_data.stories_from_rows(rows(view_data.RECENT_FILES_SQL))
     busy = view_data.processing_runs(DATA_DIR)
     newest = stories[0] if stories else None
-    status_line(now, newest, newest is not None and in_progress(newest, busy))
+    known = {view_data.run_folder_name(story.run_id) for story in stories}
+    if busy - known:
+        # A run has claimed a file but logged nothing yet (for example while LLaMA 3.2 is answering).
+        st.info("A new file arrived. The pipeline is checking its columns…")
+    else:
+        status_line(now, newest, newest is not None and in_progress(newest, busy))
     if not stories:
         st.info("Waiting for the first file. Press a button on the left to send one.")
         return
