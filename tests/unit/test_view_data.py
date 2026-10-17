@@ -93,6 +93,10 @@ def test_time_ago_without_a_time():
     ("Could not repair: a.csv (ValueError: x); b.csv (ValueError: y)", "x; y"),
     ("Could not repair: d.csv (the file repeats a column name, so it is not clear which one to use)",
      "the file repeats a column name, so it is not clear which one to use"),
+    ("Could not repair: a.csv (ValueError: x); d.csv (the file repeats a column name, so it is not clear which one to use)",
+     "x; the file repeats a column name, so it is not clear which one to use"),
+    ("Could not repair: m.csv (ValueError: most of its values are not ages (0-120)); d.csv (repeated column)",
+     "most of its values are not ages (0-120); repeated column"),
 ])
 def test_friendly_error(message, expected):
     assert view_data.friendly_error(message) == expected

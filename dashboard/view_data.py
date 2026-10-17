@@ -79,6 +79,12 @@ REJECTED_SQL = "SELECT rejected_at, row_data, reason FROM rejected_rows ORDER BY
 
 CITY_SQL = "SELECT city, total_users FROM city_summary ORDER BY total_users DESC"
 
+_ERROR_NAME = re.compile(r"^\w+(?:Error|Exception): ")
+
+# One failed file's reason in "Could not repair: a.csv (reason); b.csv (reason)". A reason may hold
+# one level of brackets, such as "(0-120)".
+_FILE_REASON = re.compile(r"\(([^()]*(?:\([^()]*\)[^()]*)*)\)(?=; |\s*$)")
+
 TASK_LABELS = {
     "validate_schema": "the column check",
     "quality_checks": "the row checks",
@@ -214,19 +220,16 @@ def time_ago(when: datetime | None, now: datetime | None = None) -> str:
 def friendly_error(message: str | None) -> str:
     """The reason in plain words: drops the 'Could not repair: file (' wrapper and Python error names.
 
-    A run with several failed files gives one reason per file, joined with '; '.
+    A run with several failed files gives one reason per file, joined with '; ', whether or not the
+    reason starts with an error name.
     """
     if not message:
         return "No reason was recorded."
-    text = message.strip()
-    parts = re.findall(r"\(\w+(?:Error|Exception): (.*?)\)(?=; |\s*$)", text, re.S)
-    if parts:
-        text = "; ".join(parts)
-    else:
-        wrapper = re.match(r"^Could not repair: [^(]+\((.*)\)\s*$", text, re.S)
-        if wrapper:
-            text = wrapper.group(1)
-        text = re.sub(r"^\w+(?:Error|Exception): ", "", text)
+    text = _ERROR_NAME.sub("", message.strip())
+    if text.startswith("Could not repair: "):
+        reasons = _FILE_REASON.findall(text) or re.findall(r"^Could not repair: [^(]+\((.*)\)\s*$", text, re.S)
+        if reasons:
+            text = "; ".join(_ERROR_NAME.sub("", reason.strip()) for reason in reasons)
     return text[:300]
 
 
