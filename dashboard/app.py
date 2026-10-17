@@ -1,22 +1,43 @@
-"""Live dashboard for the self-healing pipeline. Refreshes itself every 5 seconds."""
-import json
+"""Live dashboard for the self-healing pipeline, built for demos.
+
+The sidebar sends test files and switches the automatic supplier on or off. The main area tells
+the story of one file at a time: what arrived, what was wrong, how it was repaired, what was loaded.
+"""
 import os
 import sys
 from datetime import datetime, timezone
+from pathlib import Path
 
 import pandas as pd
 import plotly.express as px
 import psycopg2
 import streamlit as st
 
+import airflow_api
+import view_data
+
 st.set_page_config(page_title="Self-Healing Pipeline", layout="wide")
 
-METHOD_LABELS = {"rules": "Rules", "llm": "LLaMA 3.2"}
-STATUS_COLOURS = {"success": "#2e7d32", "failed": "#c62828"}
+DATA_DIR = Path(os.environ.get("PIPELINE_DATA_DIR", "/data"))
+TEST_FILES = [
+    ("clean", "Clean file"),
+    ("pipe_extra_column", "Pipes and extra column"),
+    ("reordered", "Columns reordered"),
+    ("renamed", "Columns renamed (AI)"),
+    ("bad_rows", "Bad rows"),
+]
+CHIP_COLOURS = {"ok": "green", "ai": "blue", "warn": "orange", "bad": "red"}
+HEALTH_LABELS = [
+    ("files_handled", "Files handled"),
+    ("could_not_repair", "Could not repair"),
+    ("rows_loaded", "Rows loaded"),
+    ("rows_set_aside", "Rows set aside"),
+    ("fixed_by_rules", "Fixed by rules"),
+    ("fixed_by_ai", "Fixed by AI"),
+]
 
 
 def connect():
-    """Open a database connection. Raises KeyError if a setting is missing from the environment."""
     return psycopg2.connect(
         host=os.environ.get("PIPELINE_DB_HOST", "postgres"),
         dbname=os.environ["POSTGRES_DB"],
@@ -26,157 +47,201 @@ def connect():
     )
 
 
+def rows(sql: str) -> list[dict]:
+    """Run a SELECT and return its rows as dicts, or [] if the database or table isn't there yet."""
+    try:
+        conn = connect()
+    except (KeyError, psycopg2.Error) as exc:
+        print(f"dashboard: cannot connect: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return []
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql)
+            names = [d[0] for d in cur.description]
+            return [dict(zip(names, row)) for row in cur.fetchall()]
+    except psycopg2.Error as exc:
+        print(f"dashboard: query failed: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return []
+    finally:
+        conn.close()
+
+
 def db_error() -> str | None:
-    """Say why the database cannot be reached, or return None when a connection works."""
+    """None when the database answers, otherwise the reason it doesn't."""
     try:
         connect().close()
     except KeyError as exc:
-        return f"the setting {exc} is missing from the environment"
+        return f"the setting {exc.args[0]} is missing from the environment"
     except psycopg2.Error as exc:
         return str(exc).strip() or type(exc).__name__
     return None
 
 
-def query(sql: str) -> pd.DataFrame:
-    """Run a SELECT and return a DataFrame. Returns an empty one if the table does not exist yet."""
+def chip(label: str, tone: str) -> str:
+    return f":{CHIP_COLOURS[tone]}-background[{label}]"
+
+
+def pin(key: str) -> None:
+    st.session_state["pinned"] = key
+
+
+def show_latest() -> None:
+    st.session_state.pop("pinned", None)
+
+
+def send(kind: str, label: str) -> None:
     try:
-        conn = connect()
-    except (KeyError, psycopg2.Error) as exc:
-        print(f"dashboard: cannot connect to the database: {type(exc).__name__}: {exc}", file=sys.stderr)
-        return pd.DataFrame()
+        airflow_api.send_test_file(kind)
+        st.session_state["sent_message"] = f"Sent: {label}. It shows up in about 15 seconds."
+    except airflow_api.ApiError as exc:
+        st.session_state["api_message"] = str(exc)
+
+
+def switch_automatic_files() -> None:
     try:
-        with conn.cursor() as cur:
-            cur.execute(sql)
-            columns = [d[0] for d in cur.description]
-            return pd.DataFrame(cur.fetchall(), columns=columns)
-    except psycopg2.Error as exc:
-        print(f"dashboard: query failed: {type(exc).__name__}: {exc}", file=sys.stderr)
-        return pd.DataFrame()
-    finally:
-        conn.close()
-
-
-def show_json(value):
-    """Show a JSON object or list as a tree, and anything else (a JSON string, a number) as text."""
-    try:
-        parsed = json.loads(value)
-    except (TypeError, ValueError):
-        st.code(str(value))
-        return
-    if isinstance(parsed, (dict, list)):
-        st.json(parsed)
-    else:
-        st.code(parsed if isinstance(parsed, str) else str(value))
-
-
-st.title("Self-Healing Pipeline Dashboard")
+        airflow_api.set_automatic_files(st.session_state["automatic_files"])
+    except airflow_api.ApiError as exc:
+        st.session_state["api_message"] = str(exc)
 
 
 @st.fragment(run_every=5)
-def live_view():
-    st.caption(f"Updated at {datetime.now(timezone.utc):%H:%M:%S} UTC. "
-               "Refreshes every 5 seconds. Times are UTC.")
+def health_panel() -> None:
+    st.subheader("Pipeline health")
+    found = rows(view_data.HEALTH_SQL)
+    numbers = found[0] if found else {}
+    for key, label in HEALTH_LABELS:
+        name, value = st.columns([3, 1])
+        name.write(label)
+        value.write(f"**{numbers.get(key) or 0}**")
 
+
+def status_line(now: datetime) -> None:
+    found = rows(view_data.LAST_RUN_SQL)
+    if not found:
+        return
+    last = found[0]
+    when = view_data.time_ago(last["finished_at"] or last["started_at"], now)
+    if last["status"] == "failed":
+        st.error(f"The last run failed during {view_data.task_label(last['failed_task'])} ({when}): "
+                 f"{view_data.friendly_error(last['error_message'])}")
+    else:
+        st.success(f"Pipeline is healthy. Last file handled {when}.")
+
+
+def file_card(story: view_data.FileStory, is_latest: bool, now: datetime) -> None:
+    label, tone = view_data.result(story)
+    with st.container(border=True):
+        title, result_col = st.columns([4, 1])
+        title.subheader(("Latest file: " if is_latest else "File: ")
+                        + view_data.what_arrived(story.drift_type, story.rows_set_aside))
+        result_col.markdown(chip(label, tone))
+        st.caption(f"{story.source_file} · arrived {view_data.time_ago(story.seen_at, now)}")
+
+        for column, (step, detail) in zip(st.columns(4), view_data.journey(story, now)):
+            column.markdown(f"**{step}**  \n{detail}")
+
+        folder = view_data.find_run_folder(DATA_DIR, story.run_id, story.source_file)
+        before, after = st.columns(2)
+        with before:
+            st.caption("What arrived (as edited by hand)" if label == "Fixed by hand" else "What arrived")
+            lines = view_data.raw_preview(folder, story.source_file) if folder else []
+            st.code("\n".join(lines) if lines else "The original file is not available.", language=None)
+        with after:
+            caption, table = view_data.after_rows(folder, story.source_file) if folder else ("After repair", [])
+            if caption == "What was loaded" and not story.rows_loaded:
+                caption = "Passed the row checks (not loaded)"
+            st.caption(caption)
+            if len(table) > 1:
+                st.dataframe(pd.DataFrame(table[1:], columns=table[0]), hide_index=True,
+                             use_container_width=True)
+            else:
+                st.write("Nothing from this file was loaded.")
+
+        if story.method == "llm" and story.repaired_ok:
+            said = view_data.ai_said(story.llm_answer) or view_data.ai_summary(story.mapping)
+            if said:
+                st.info(f"AI said: {said}")
+        if story.repaired_ok is False:
+            reason = view_data.friendly_error(story.error_message)
+            if story.rows_loaded or story.rows_set_aside:
+                st.warning(f"The automatic repair failed ({reason}). The file was then fixed by hand and loaded.")
+            else:
+                st.error(f"Could not repair: {reason}")
+        if not is_latest:
+            st.button("Show latest", key="show_latest", on_click=show_latest)
+
+
+def recent_files(stories: list[view_data.FileStory], shown: view_data.FileStory, now: datetime) -> None:
+    st.subheader("Recent files")
+    for story in stories:
+        label, tone = view_data.result(story)
+        when, what, result_col, view = st.columns([1.3, 3, 2, 1])
+        when.write(view_data.time_ago(story.seen_at, now))
+        what.write(view_data.what_arrived(story.drift_type, story.rows_set_aside))
+        result_col.markdown(chip(label, tone))
+        view.button("View", key=f"view_{story.key}", on_click=pin, args=(story.key,),
+                    disabled=story.key == shown.key)
+
+
+def folded_sections(now: datetime) -> None:
+    with st.expander("Rows set aside, and why"):
+        aside = rows(view_data.REJECTED_SQL)
+        if aside:
+            table = [{"When": view_data.time_ago(r["rejected_at"], now),
+                      "Row": view_data.row_text(r["row_data"]),
+                      "Why": r["reason"]} for r in aside]
+            st.dataframe(pd.DataFrame(table), hide_index=True, use_container_width=True)
+        else:
+            st.write("No rows have been set aside yet.")
+    with st.expander("Users by city"):
+        cities = rows(view_data.CITY_SQL)
+        if cities:
+            st.plotly_chart(px.pie(pd.DataFrame(cities), names="city", values="total_users"),
+                            use_container_width=True)
+        else:
+            st.write("No city data yet.")
+
+
+@st.fragment(run_every=5)
+def main_view() -> None:
+    now = datetime.now(timezone.utc)
     error = db_error()
     if error:
-        st.warning(f"Cannot reach the database: {error}")
+        st.error(f"Can't reach the database: {error}")
         return
-
-    runs = query("""
-        SELECT run_id, status, started_at, finished_at, files_processed, rows_loaded,
-               rows_rejected, heals, failed_task, error_message
-        FROM pipeline_run_log WHERE run_id IS NOT NULL ORDER BY started_at DESC NULLS LAST""")
-    # A retry repairs the same file again, so keep only the latest attempt for each file.
-    repairs = query("""
-        SELECT * FROM (
-            SELECT DISTINCT ON (run_id, source_file)
-                   healed_at, run_id, source_file, drift_type, method, mapping, llm_diagnosis,
-                   success, error_message
-            FROM healing_log WHERE drift_type IS NOT NULL
-            ORDER BY run_id, source_file, healed_at DESC
-        ) latest ORDER BY healed_at DESC""")
-    attempts = query("SELECT COUNT(*) AS n FROM healing_log WHERE drift_type IS NOT NULL")
-    rejected = query("""
-        SELECT rejected_at, source_file, row_data, reason
-        FROM rejected_rows ORDER BY rejected_at DESC LIMIT 50""")
-    cities = query("SELECT city, total_users, avg_age FROM city_summary ORDER BY total_users DESC")
-
-    if runs.empty:
-        st.info("No pipeline runs yet. The supplier drops a file every 2 minutes, "
-                "or trigger supplier_dag in Airflow.")
+    status_line(now)
+    stories = view_data.stories_from_rows(rows(view_data.RECENT_FILES_SQL))
+    if not stories:
+        st.info("Waiting for the first file. Press a button on the left to send one.")
         return
+    pinned = st.session_state.get("pinned")
+    shown = next((s for s in stories if s.key == pinned), stories[0])
+    file_card(shown, is_latest=shown is stories[0], now=now)
+    recent_files(stories, shown, now)
+    folded_sections(now)
+    st.caption(f"Updated {now:%H:%M:%S} UTC. Refreshes every 5 seconds.")
 
-    last = runs.iloc[0]
-    finished = runs[runs["status"] != "no_data"]
-    fixed = int(repairs["success"].sum()) if not repairs.empty else 0
-    repair_rate = f"{fixed / len(repairs) * 100:.0f}%" if len(repairs) else "n/a"
 
-    cols = st.columns(6)
-    cols[0].metric("Last run", str(last["status"]))
-    cols[1].metric("Runs", len(finished))
-    cols[2].metric("Rows loaded", int(runs["rows_loaded"].fillna(0).sum()))
-    cols[3].metric("Rows rejected", int(runs["rows_rejected"].fillna(0).sum()))
-    cols[4].metric("Files repaired", fixed)
-    cols[5].metric("Repair success", repair_rate)
-    if pd.notna(last["started_at"]):
-        st.caption(f"Last run started {last['started_at']:%Y-%m-%d %H:%M:%S}")
-
-    st.subheader("Runs")
-    if finished.empty:
-        st.info("No finished runs yet.")
+with st.sidebar:
+    st.header("Send a test file")
+    for kind, label in TEST_FILES:
+        st.button(label, key=f"send_{kind}", on_click=send, args=(kind, label), use_container_width=True)
+    automatic = airflow_api.automatic_files_on()
+    if automatic is None:
+        st.caption("Automatic files: Airflow is not reachable.")
     else:
-        chart = px.scatter(finished.sort_values("started_at"), x="started_at", y="rows_loaded", color="status",
-                           color_discrete_map=STATUS_COLOURS, hover_data=["run_id", "failed_task"],
-                           labels={"started_at": "Run started", "rows_loaded": "Rows loaded"})
-        st.plotly_chart(chart, use_container_width=True)
+        if "automatic_files" not in st.session_state:
+            st.session_state["automatic_files"] = automatic
+        st.toggle("Automatic file every 2 minutes", key="automatic_files", on_change=switch_automatic_files)
+    if "api_message" in st.session_state:
+        st.error(st.session_state.pop("api_message"))
+    st.divider()
+    health_panel()
 
-    st.subheader("Failed runs")
-    failed = runs[runs["status"] == "failed"]
-    if failed.empty:
-        st.success("No failed runs.")
-    else:
-        st.dataframe(failed[["started_at", "run_id", "failed_task", "error_message"]],
-                     use_container_width=True, hide_index=True)
+if "sent_message" in st.session_state:
+    st.toast(st.session_state.pop("sent_message"))
 
-    st.subheader("Repairs")
-    if repairs.empty:
-        st.info("No repairs yet.")
-    else:
-        total_attempts = int(attempts["n"].iloc[0]) if not attempts.empty else len(repairs)
-        st.caption(f"Latest attempt for each file. {total_attempts} attempts in total, including retries.")
-        left, right = st.columns([1, 2])
-        left.bar_chart(repairs["method"].map(METHOD_LABELS).fillna("Not repaired").value_counts())
-        with right:
-            for _, row in repairs.head(20).iterrows():
-                method = METHOD_LABELS.get(row["method"])
-                if method is None:
-                    title = f"Not repaired: {row['source_file']} ({row['drift_type']})"
-                else:
-                    outcome = "Fixed" if row["success"] else "Failed"
-                    title = f"{outcome} by {method}: {row['source_file']} ({row['drift_type']})"
-                with st.expander(title):
-                    if row["mapping"]:
-                        st.write("Column mapping:")
-                        show_json(row["mapping"])
-                    if row["llm_diagnosis"]:
-                        st.write("AI answer:")
-                        show_json(row["llm_diagnosis"])
-                    if row["error_message"]:
-                        st.error(row["error_message"])
-
-    left, right = st.columns(2)
-    with left:
-        st.subheader("Rejected rows")
-        if rejected.empty:
-            st.info("No rejected rows.")
-        else:
-            st.dataframe(rejected, use_container_width=True, hide_index=True)
-    with right:
-        st.subheader("Users by city")
-        if cities.empty:
-            st.info("No city data yet.")
-        else:
-            st.plotly_chart(px.pie(cities, names="city", values="total_users"), use_container_width=True)
-
-
-live_view()
+st.title("Self-Healing Pipeline")
+st.caption("CSV files arrive with problems. The pipeline checks their columns, repairs them with rules "
+           "or LLaMA 3.2, sets bad rows aside, and loads the rest into PostgreSQL.")
+main_view()
