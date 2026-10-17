@@ -117,11 +117,15 @@ def health_panel() -> None:
         value.write(f"**{numbers.get(key) or 0}**")
 
 
-def status_line(now: datetime) -> None:
+def status_line(now: datetime, newest: view_data.FileStory | None) -> None:
     found = rows(view_data.LAST_RUN_SQL)
     if not found:
         return
     last = found[0]
+    if last["status"] != "failed" and newest is not None:
+        # The run log is written after dbt finishes, so the newest file can be more recent than it.
+        st.success(f"Pipeline is healthy. Last file arrived {view_data.time_ago(newest.seen_at, now)}.")
+        return
     when = view_data.time_ago(last["finished_at"] or last["started_at"], now)
     if last["status"] == "failed":
         st.error(f"The last run failed during {view_data.task_label(last['failed_task'])} ({when}): "
@@ -217,8 +221,8 @@ def main_view() -> None:
     if error:
         st.error(f"Can't reach the database: {error}")
         return
-    status_line(now)
     stories = view_data.stories_from_rows(rows(view_data.RECENT_FILES_SQL))
+    status_line(now, stories[0] if stories else None)
     if not stories:
         st.info("Waiting for the first file. Press a button on the left to send one.")
         return
