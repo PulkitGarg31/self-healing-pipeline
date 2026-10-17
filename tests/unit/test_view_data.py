@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import pytest
 
@@ -60,6 +61,16 @@ def test_result(overrides, expected):
     assert view_data.result(story(**overrides)) == expected
 
 
+@pytest.mark.parametrize("overrides", [
+    {},
+    {"drift_type": "column order: city, name, age", "method": "rules", "repaired_ok": True, "rows_loaded": 0},
+    {"drift_type": "missing columns: name", "method": "llm", "repaired_ok": False, "rows_loaded": 0},
+    {"drift_type": "missing columns: name", "method": "llm", "repaired_ok": True},
+])
+def test_result_while_the_file_is_in_progress(overrides):
+    assert view_data.result(story(**overrides), in_progress=True) == ("In progress", "busy")
+
+
 @pytest.mark.parametrize("delta, expected", [
     (timedelta(seconds=2), "just now"),
     (timedelta(seconds=40), "40 seconds ago"),
@@ -100,6 +111,39 @@ def test_time_ago_without_a_time():
 ])
 def test_friendly_error(message, expected):
     assert view_data.friendly_error(message) == expected
+
+
+OLLAMA_DOWN = "LLaMA 3.2 (Ollama) did not answer. Is Ollama running?"
+REFUSED = ("ConnectionError: HTTPConnectionPool(host='host.docker.internal', port=11434): Max retries exceeded "
+           "with url: /api/generate (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object "
+           "at 0x7f2c>: Failed to establish a new connection: [Errno 111] Connection refused'))")
+TIMED_OUT = ("ReadTimeout: HTTPConnectionPool(host='host.docker.internal', port=11434): Read timed out. "
+             "(read timeout=60)")
+REPEATS = "the file repeats a column name, so it is not clear which one to use"
+
+
+@pytest.mark.parametrize("message, expected", [
+    (REFUSED, OLLAMA_DOWN),
+    (TIMED_OUT, OLLAMA_DOWN),
+    ("Could not repair: f.csv (ConnectionError: HTTPConnectionPool(host=...): Max retries exceeded ...)",
+     OLLAMA_DOWN),
+    (f"Could not repair: f.csv ({REFUSED})", OLLAMA_DOWN),
+    (f"Could not repair: f.csv ({TIMED_OUT})", OLLAMA_DOWN),
+    (f"Could not repair: a.csv ({REFUSED}); d.csv ({REPEATS})", f"{OLLAMA_DOWN}; {REPEATS}"),
+    (f"Could not repair: d.csv (repeated column); a.csv ({TIMED_OUT})", f"repeated column; {OLLAMA_DOWN}"),
+    (f"Could not repair: a.csv ({REFUSED}); b.csv ({TIMED_OUT})", OLLAMA_DOWN),
+], ids=["refused", "timed out", "wrapped", "wrapped refused", "wrapped timeout", "ollama first",
+        "ollama last", "said once"])
+def test_friendly_error_when_ollama_does_not_answer(message, expected):
+    assert view_data.friendly_error(message) == expected
+
+
+@pytest.mark.parametrize("words", [
+    "HTTPConnectionPool(host='x', port=1)", "Max retries exceeded", "Read timed out", "Connection refused",
+    "NewConnectionError('x')",
+])
+def test_each_ollama_outage_phrase_is_explained(words):
+    assert view_data.friendly_error(f"Could not repair: f.csv (RuntimeError: {words})") == OLLAMA_DOWN
 
 
 @pytest.mark.parametrize("task, expected", [
@@ -159,6 +203,47 @@ def test_find_run_folder_without_a_data_folder(tmp_path):
     assert view_data.find_run_folder(tmp_path / "missing", RUN, "a.csv") is None
 
 
+def test_find_run_folder_skips_a_folder_that_moves_while_it_looks(tmp_path, monkeypatch):
+    moved = make_run(tmp_path, "processing", view_data.run_folder_name(RUN), "a.csv")
+    kept = make_run(tmp_path, "failed", view_data.run_folder_name(RUN), "a.csv")
+    real_stat = Path.stat
+
+    def stat(self, *args, **kwargs):
+        if self == moved:
+            raise FileNotFoundError(2, "No such file or directory", str(self))
+        return real_stat(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "stat", stat)
+    assert view_data.find_run_folder(tmp_path, RUN, "a.csv") == kept
+
+
+def test_find_run_folder_skips_an_area_that_cannot_be_read(tmp_path, monkeypatch):
+    make_run(tmp_path, "processing", view_data.run_folder_name(RUN), "a.csv")
+    kept = make_run(tmp_path, "processed", view_data.run_folder_name(RUN), "a.csv")
+    real_iterdir = Path.iterdir
+
+    def iterdir(self):
+        if self.name == "processing":
+            raise FileNotFoundError(2, "No such file or directory", str(self))
+        return real_iterdir(self)
+
+    monkeypatch.setattr(Path, "iterdir", iterdir)
+    assert view_data.find_run_folder(tmp_path, RUN, "a.csv") == kept
+
+
+def test_processing_runs(tmp_path):
+    make_run(tmp_path, "processing", "run_a", "a.csv")
+    make_run(tmp_path, "processing", "run_b", "b.csv")
+    make_run(tmp_path, "processed", "run_c", "c.csv")
+    (tmp_path / "processing" / "notes.txt").write_text("not a run", encoding="utf-8")
+    assert view_data.processing_runs(tmp_path) == {"run_a", "run_b"}
+
+
+def test_processing_runs_without_a_processing_folder(tmp_path):
+    assert view_data.processing_runs(tmp_path) == set()
+    assert view_data.processing_runs(tmp_path / "missing") == set()
+
+
 def test_raw_preview_shows_lines_as_they_arrived(tmp_path):
     raw = "\ufeffname|age|city|unknown_column\nAsha|30|Delhi|x\n\nRavi|41|Pune|y\nSara|22|Goa|z\nMore|1|X|y\n"
     folder = make_run(tmp_path, "processed", "r", "a.csv", raw=raw)
@@ -175,6 +260,11 @@ def test_raw_preview_of_a_missing_file(tmp_path):
     assert view_data.raw_preview(tmp_path, "nope.csv") == []
 
 
+def test_raw_preview_of_a_file_name_it_cannot_open(tmp_path):
+    folder = make_run(tmp_path, "processed", "r", "a.csv")
+    assert view_data.raw_preview(folder, "a\0.csv") == []
+
+
 def test_repaired_rows(tmp_path):
     valid = "name,age,city\nA,1,X\nB,2,Y\nC,3,Z\nD,4,W\n"
     folder = make_run(tmp_path, "processed", "r", "a.csv", valid=valid)
@@ -185,6 +275,18 @@ def test_repaired_rows(tmp_path):
 def test_repaired_rows_of_a_missing_file(tmp_path):
     folder = make_run(tmp_path, "processed", "r", "a.csv")
     assert view_data.repaired_rows(folder, "a.csv") == []
+
+
+def test_repaired_rows_that_are_not_utf8(tmp_path):
+    folder = make_run(tmp_path, "processed", "r", "a.csv", valid="")
+    (folder / "valid" / "a.csv").write_bytes(b"name,age,city\n\xff\xfe,1,X\n")
+    assert view_data.repaired_rows(folder, "a.csv") == []
+
+
+def test_after_rows_when_good_csv_is_not_utf8(tmp_path):
+    folder = make_run(tmp_path, "processed", "r", "a.csv")
+    (folder / "good.csv").write_bytes(b"source_file,name,age,city\na.csv,\xff\xfe,1,X\n")
+    assert view_data.after_rows(folder, "a.csv") == ("What was loaded", [])
 
 
 def test_after_rows_shows_only_this_files_loaded_rows(tmp_path):
@@ -235,6 +337,34 @@ def test_journey_for_a_failed_repair():
 def test_journey_for_a_repair_fixed_by_hand():
     fixed = story(drift_type="missing columns: name", method="llm", repaired_ok=False, rows_loaded=2)
     assert view_data.journey(fixed, NOW)[2] == ("Repaired", "fixed by hand")
+
+
+def test_journey_while_a_failed_repair_is_retried():
+    retrying = story(drift_type="missing columns: name", method="llm", repaired_ok=False, rows_loaded=0)
+    assert view_data.journey(retrying, NOW, in_progress=True) == [
+        ("Received", "30 seconds ago"),
+        ("Checked", "columns renamed"),
+        ("Repaired", "working on it"),
+        ("Loaded", "loading…"),
+    ]
+
+
+def test_journey_while_a_repaired_file_is_loading():
+    loading = story(drift_type="column order: city, name, age", method="rules", repaired_ok=True, rows_loaded=0)
+    assert view_data.journey(loading, NOW, in_progress=True)[1:] == [
+        ("Checked", "columns reordered"),
+        ("Repaired", "by rules"),
+        ("Loaded", "loading…"),
+    ]
+
+
+def test_journey_while_a_loaded_file_is_finishing():
+    finishing = story(drift_type="missing columns: name", method="llm", repaired_ok=True, rows_set_aside=1)
+    assert view_data.journey(finishing, NOW, in_progress=True) == view_data.journey(finishing, NOW)
+    assert view_data.journey(story(), NOW, in_progress=True) == view_data.journey(story(), NOW)
+    fixed = story(drift_type="missing columns: name", method="llm", repaired_ok=False, rows_loaded=2)
+    assert view_data.journey(fixed, NOW, in_progress=True)[2:] == [
+        ("Repaired", "fixed by hand"), ("Loaded", "2 saved, 0 set aside")]
 
 
 def test_stories_from_rows():

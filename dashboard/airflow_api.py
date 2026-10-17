@@ -33,7 +33,10 @@ def _call(method: str, path: str, **kwargs) -> dict:
                        "AIRFLOW_DASHBOARD_PASSWORD in .env.")
     if not response.ok:
         raise ApiError(f"Airflow returned HTTP {response.status_code}: {response.text[:200]}")
-    return response.json()
+    try:
+        return response.json()
+    except ValueError as exc:  # requests' JSONDecodeError is a ValueError too
+        raise ApiError("Airflow sent a reply the dashboard could not read.") from exc
 
 
 def send_test_file(kind: str) -> str:

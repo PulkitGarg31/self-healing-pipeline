@@ -12,6 +12,8 @@ class FakeResponse:
         self.text = text
 
     def json(self):
+        if isinstance(self._body, Exception):
+            raise self._body
         return self._body
 
 
@@ -79,6 +81,14 @@ def test_other_http_errors_keep_airflow_text(calls):
     _, replies = calls
     replies.append(FakeResponse(status_code=404, text='{"detail": "DAG not found"}'))
     with pytest.raises(airflow_api.ApiError, match="HTTP 404.*DAG not found"):
+        airflow_api.send_test_file("clean")
+
+
+def test_a_reply_that_is_not_json_is_explained(calls):
+    _, replies = calls
+    replies.append(FakeResponse(body=requests.exceptions.JSONDecodeError("Expecting value", "<html>", 0),
+                                text="<html>"))
+    with pytest.raises(airflow_api.ApiError, match="^Airflow sent a reply the dashboard could not read.$"):
         airflow_api.send_test_file("clean")
 
 

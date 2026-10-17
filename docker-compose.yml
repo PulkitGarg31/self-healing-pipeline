@@ -4,7 +4,7 @@ services:
     restart: unless-stopped
     env_file: .env
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -35,6 +35,9 @@ services:
       _AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_DASHBOARD_USER}
       _AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_DASHBOARD_PASSWORD}
       _AIRFLOW_WWW_USER_ROLE: User
+      _AIRFLOW_WWW_USER_FIRSTNAME: Dashboard
+      _AIRFLOW_WWW_USER_LASTNAME: Buttons
+      _AIRFLOW_WWW_USER_EMAIL: dashboard@example.com
       _PIP_ADDITIONAL_REQUIREMENTS: 'dbt-postgres==1.7.0 pytest==8.3.3'
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -48,7 +51,7 @@ services:
       - ./data:/opt/airflow/data
       - ./dashboard:/opt/airflow/dashboard:ro
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     command: standalone
     healthcheck:
       test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/health"]
@@ -65,7 +68,7 @@ services:
         condition: service_healthy
     env_file: .env
     ports:
-      - "8501:8501"
+      - "127.0.0.1:8501:8501"
     environment:
       PIPELINE_DATA_DIR: /data
       AIRFLOW_API_URL: http://airflow:8080/api/v1

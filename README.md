@@ -83,7 +83,9 @@ http://localhost:8501 is built for demos and refreshes every 5 seconds.
   reordered, renamed, bad rows), a switch for the automatic file every 2 minutes, and the
   pipeline's health numbers.
 - **File story:** for the latest file (or one you pick), what arrived, what was wrong, how it was
-  repaired (rules or LLaMA 3.2, with what the AI said), and how many rows were saved or set aside.
+  repaired (by rules or by LLaMA 3.2), and how many rows were saved or set aside. An AI repair is
+  shown with the column mapping LLaMA 3.2 chose (checked before use) and its full answer. The card
+  shows the first lines of the file exactly as they arrived, and the rows that were actually loaded.
 - **Recent files:** one line per file with its result. "View" opens its story.
 - Folded at the bottom: rows set aside with the reason, and users by city.
 
@@ -108,6 +110,8 @@ About `.env`:
   `docker compose down -v`, which also deletes the stored data.
 - `AIRFLOW_DASHBOARD_PASSWORD` is set the first time Airflow starts. To change it later, delete the
   `dashboard` user in Airflow (or run `docker compose down -v`) and start again.
+- If you already have a `.env` from before, add the two `AIRFLOW_DASHBOARD_*` lines from
+  `.env.example`, or Airflow will not start.
 
 Then:
 - Airflow: http://localhost:8080 (user `admin`; the password is printed in `docker compose logs airflow`)

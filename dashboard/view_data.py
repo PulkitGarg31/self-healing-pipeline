@@ -81,9 +81,14 @@ CITY_SQL = "SELECT city, total_users FROM city_summary ORDER BY total_users DESC
 
 _ERROR_NAME = re.compile(r"^\w+(?:Error|Exception): ")
 
-# One failed file's reason in "Could not repair: a.csv (reason); b.csv (reason)". A reason may hold
-# one level of brackets, such as "(0-120)".
-_FILE_REASON = re.compile(r"\(([^()]*(?:\([^()]*\)[^()]*)*)\)(?=; |\s*$)")
+# Where one failed file ends and the next begins in "Could not repair: a.csv (reason); b.csv (reason)".
+# A reason may hold brackets of any depth, such as "(0-120)" or the nested ones in a requests error.
+_NEXT_FILE = re.compile(r"\); (?=[^();]+ \()")
+
+# The requests library's words when Ollama is down, slow or unreachable.
+_OLLAMA_DOWN = re.compile(
+    r"HTTPConnectionPool|Max retries exceeded|Read timed out|Connection refused|NewConnectionError")
+OLLAMA_DOWN = "LLaMA 3.2 (Ollama) did not answer. Is Ollama running?"
 
 TASK_LABELS = {
     "validate_schema": "the column check",
@@ -153,8 +158,13 @@ def what_arrived(drift_type: str | None, rows_set_aside: int = 0) -> str:
     return text[0].upper() + text[1:]
 
 
-def result(story: FileStory) -> tuple[str, str]:
-    """(label, tone) for the file's outcome. Tone is one of ok, ai, warn, bad."""
+def result(story: FileStory, in_progress: bool = False) -> tuple[str, str]:
+    """(label, tone) for the file's outcome. Tone is one of ok, ai, warn, bad, busy.
+
+    in_progress is True while the file's run folder is still in data/processing/.
+    """
+    if in_progress:
+        return "In progress", "busy"
     if story.repaired_ok is False:
         if story.rows_loaded or story.rows_set_aside:
             return "Fixed by hand", "ok"
@@ -171,8 +181,12 @@ def result(story: FileStory) -> tuple[str, str]:
     return "No repair needed", "ok"
 
 
-def journey(story: FileStory, now: datetime | None = None) -> list[tuple[str, str]]:
-    """The four steps of the file story: received, checked, repaired, loaded."""
+def journey(story: FileStory, now: datetime | None = None, in_progress: bool = False) -> list[tuple[str, str]]:
+    """The four steps of the file story: received, checked, repaired, loaded.
+
+    While the file is in progress, a repair that has not worked yet may still be retried, and
+    nothing loaded may only mean not loaded yet.
+    """
     if story.drift_type is None:
         checked, repaired = "columns were fine", "not needed"
     else:
@@ -181,10 +195,14 @@ def journey(story: FileStory, now: datetime | None = None) -> list[tuple[str, st
             repaired = {"llm": "by LLaMA 3.2", "rules": "by rules"}.get(story.method, "done")
         elif story.rows_loaded or story.rows_set_aside:
             repaired = "fixed by hand"
+        elif in_progress:
+            repaired = "working on it"
         else:
             repaired = "failed"
     if story.rows_loaded or story.rows_set_aside:
         loaded = f"{story.rows_loaded} saved, {story.rows_set_aside} set aside"
+    elif in_progress:
+        loaded = "loading…"
     else:
         loaded = "nothing loaded"
     return [
@@ -221,16 +239,36 @@ def friendly_error(message: str | None) -> str:
     """The reason in plain words: drops the 'Could not repair: file (' wrapper and Python error names.
 
     A run with several failed files gives one reason per file, joined with '; ', whether or not the
-    reason starts with an error name.
+    reason starts with an error name. A reason that shows Ollama did not answer becomes one plain
+    sentence, given once even if several files hit it.
     """
     if not message:
         return "No reason was recorded."
     text = _ERROR_NAME.sub("", message.strip())
+    reasons = [text]
     if text.startswith("Could not repair: "):
-        reasons = _FILE_REASON.findall(text) or re.findall(r"^Could not repair: [^(]+\((.*)\)\s*$", text, re.S)
-        if reasons:
-            text = "; ".join(_ERROR_NAME.sub("", reason.strip()) for reason in reasons)
-    return text[:300]
+        reasons = _file_reasons(text.removeprefix("Could not repair: ")) or reasons
+    plain = [_plain_reason(reason) for reason in reasons]
+    return "; ".join(dict.fromkeys(plain))[:300]
+
+
+def _file_reasons(body: str) -> list[str]:
+    """The reasons in 'a.csv (reason); b.csv (reason)', or [] if the text has another shape."""
+    body = body.rstrip()
+    if not body.endswith(")"):
+        return []
+    reasons = []
+    for part in _NEXT_FILE.split(body[:-1]):
+        _, bracket, reason = part.partition(" (")
+        if not bracket:
+            return []
+        reasons.append(reason)
+    return reasons
+
+
+def _plain_reason(reason: str) -> str:
+    reason = _ERROR_NAME.sub("", reason.strip())
+    return OLLAMA_DOWN if _OLLAMA_DOWN.search(reason) else reason
 
 
 def task_label(task_id: str | None) -> str:
@@ -273,25 +311,39 @@ def run_folder_name(run_id: str) -> str:
     return name if name.strip(".") else name.replace(".", "_")
 
 
+def processing_runs(data_dir: Path) -> set[str]:
+    """Names of the run folders in data/processing/: runs the pipeline is still working on."""
+    try:
+        return {folder.name for folder in (data_dir / "processing").iterdir() if folder.is_dir()}
+    except OSError:
+        return set()
+
+
 def find_run_folder(data_dir: Path, run_id: str, source_file: str) -> Path | None:
-    """The newest run folder holding this file. Archived copies may end in __2, __3, ..."""
+    """The newest run folder holding this file. Archived copies may end in __2, __3, ...
+
+    The pipeline moves run folders between areas, so a folder that vanishes mid-scan is skipped.
+    """
     pattern = re.compile(re.escape(run_folder_name(run_id)) + r"(__\d+)?")
     found = []
     for area in ("processing", "processed", "failed"):
-        base = data_dir / area
-        if not base.is_dir():
+        try:
+            for folder in (data_dir / area).iterdir():
+                if pattern.fullmatch(folder.name) and (folder / "raw" / source_file).is_file():
+                    try:
+                        found.append((folder.stat().st_mtime, folder))
+                    except OSError:
+                        continue
+        except OSError:
             continue
-        for folder in base.iterdir():
-            if pattern.fullmatch(folder.name) and (folder / "raw" / source_file).is_file():
-                found.append(folder)
-    return max(found, key=lambda folder: folder.stat().st_mtime) if found else None
+    return max(found, key=lambda pair: pair[0])[1] if found else None
 
 
 def raw_preview(folder: Path, source_file: str, max_lines: int = 4, max_chars: int = 120) -> list[str]:
     """The first non-blank lines of the file exactly as it arrived."""
     try:
         text = (folder / "raw" / source_file).read_text(encoding="utf-8-sig", errors="replace")
-    except OSError:
+    except (OSError, ValueError):
         return []
     lines = [line[:max_chars] for line in text.splitlines() if line.strip()]
     return lines[:max_lines]
@@ -302,7 +354,7 @@ def repaired_rows(folder: Path, source_file: str, max_rows: int = 3) -> list[lis
     try:
         with open(folder / "valid" / source_file, newline="", encoding="utf-8") as f:
             rows = list(csv.reader(f))
-    except (OSError, csv.Error):
+    except (OSError, ValueError, csv.Error):
         return []
     return rows[: max_rows + 1]
 
@@ -325,7 +377,7 @@ def after_rows(folder: Path, source_file: str, max_rows: int = 3) -> tuple[str, 
                         rows.append(row[1:4])
                         if len(rows) == max_rows:
                             break
-        except (OSError, csv.Error):
+        except (OSError, ValueError, csv.Error):
             rows = []
         return "What was loaded", ([["name", "age", "city"], *rows] if rows else [])
     if (folder / "valid" / source_file).is_file():
