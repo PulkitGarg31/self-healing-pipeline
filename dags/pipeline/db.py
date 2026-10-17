@@ -92,35 +92,40 @@ def log_heal(conn, run_id: str, result) -> None:
     conn.commit()
 
 
-def load_rows(conn, run_id: str, good, rejected) -> bool:
+def load_rows(conn, run_id: str, good, rejected) -> tuple[int, int, list[str]]:
     """Save good rows to raw_users and bad rows to rejected_rows in one transaction: all or nothing.
 
-    A run that is already saved (it was re-run after a later task failed) is not saved twice.
-    Returns True when rows were saved, False when the run was already loaded.
+    A source file that was already loaded (for example, its run was re-run after a later task
+    failed) is not saved again. Returns (good rows saved, rejected rows saved, files skipped).
     """
+    names = sorted({source for source, _ in good} | {item.source_file for item in rejected})
     try:
         with conn.cursor() as cur:
             cur.execute(
-                """SELECT 1 FROM raw_users WHERE run_id = %s
-                   UNION ALL SELECT 1 FROM rejected_rows WHERE run_id = %s
-                   LIMIT 1""",
-                (run_id, run_id),
+                """SELECT source_file FROM raw_users WHERE source_file = ANY(%s::text[])
+                   UNION SELECT source_file FROM rejected_rows WHERE source_file = ANY(%s::text[])""",
+                (names, names),
             )
-            if cur.fetchone():
-                conn.rollback()
-                return False
+            already = {row[0] for row in cur.fetchall()}
+            saved_good = saved_rejected = 0
             for source_file, (name, age, city) in good:
+                if source_file in already:
+                    continue
                 cur.execute(
                     "INSERT INTO raw_users (name, age, city, run_id, source_file) VALUES (%s, %s, %s, %s, %s)",
                     (name, int(age), city, run_id, source_file),
                 )
+                saved_good += 1
             for item in rejected:
+                if item.source_file in already:
+                    continue
                 cur.execute(
                     "INSERT INTO rejected_rows (run_id, source_file, row_data, reason) VALUES (%s, %s, %s, %s)",
                     (run_id, item.source_file, json.dumps(item.row), item.reason),
                 )
+                saved_rejected += 1
         conn.commit()
-        return True
+        return saved_good, saved_rejected, sorted(already)
     except Exception:
         conn.rollback()
         raise

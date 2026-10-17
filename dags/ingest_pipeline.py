@@ -53,12 +53,12 @@ def ingest_data(run_id, **_):
     conn = db.connect()
     try:
         db.ensure_tables(conn)
-        loaded = db.load_rows(conn, run_id, good, rejected)
+        saved, saved_rejected, skipped = db.load_rows(conn, run_id, good, rejected)
     finally:
         conn.close()
-    if not loaded:
-        print(f"Run {run_id} was already loaded, so its rows were not saved again.")
-    return {"rows_loaded": len(good), "rows_rejected": len(rejected), "already_loaded": not loaded}
+    if skipped:
+        print("Already loaded, so not saved again: " + ", ".join(skipped))
+    return {"rows_loaded": saved, "rows_rejected": saved_rejected, "files_skipped": skipped}
 
 
 def transform_data(**_):
@@ -69,7 +69,7 @@ def transform_data(**_):
     )
     print(result.stdout)
     if result.returncode != 0:
-        raise RuntimeError(result.stderr or result.stdout)
+        raise RuntimeError((result.stdout + result.stderr)[-1500:])
 
 
 def _task_output(dag_run, task_id) -> dict:
@@ -80,46 +80,55 @@ def _task_output(dag_run, task_id) -> dict:
 def on_run_success(context):
     """DAG callback: log a finished run (or a run with no new files) and archive its files."""
     dag_run = context["dag_run"]
-    validate_ti = dag_run.get_task_instance("validate_schema")
-    status = "no_data" if validate_ti and validate_ti.state == "skipped" else "success"
-    validated = _task_output(dag_run, "validate_schema")
-    ingested = _task_output(dag_run, "ingest_data")
-    conn = db.connect()
     try:
-        db.ensure_tables(conn)
-        db.write_run_log(
-            conn, dag_run.run_id, status, dag_run.start_date, datetime.now(timezone.utc),
-            files_processed=validated.get("files", 0),
-            heals=validated.get("heals", 0),
-            rows_loaded=ingested.get("rows_loaded", 0),
-            rows_rejected=ingested.get("rows_rejected", 0),
-        )
+        validate_ti = dag_run.get_task_instance("validate_schema")
+        status = "no_data" if validate_ti and validate_ti.state == "skipped" else "success"
+        validated = _task_output(dag_run, "validate_schema")
+        ingested = _task_output(dag_run, "ingest_data")
+        conn = db.connect()
+        try:
+            db.ensure_tables(conn)
+            db.write_run_log(
+                conn, dag_run.run_id, status, dag_run.start_date, datetime.now(timezone.utc),
+                files_processed=validated.get("files", 0),
+                heals=validated.get("heals", 0),
+                rows_loaded=ingested.get("rows_loaded", 0),
+                rows_rejected=ingested.get("rows_rejected", 0),
+            )
+        finally:
+            conn.close()
     finally:
-        conn.close()
-    files.finish_run(config.data_dir(), dag_run.run_id, "processed")
+        # Archive the files even if the run log could not be written.
+        files.finish_run(config.data_dir(), dag_run.run_id, "processed")
 
 
 def on_task_failure(context):
     """Task callback after the last retry fails: log the failed run and keep its files in data/failed/."""
     dag_run = context["dag_run"]
     data_dir = config.data_dir()
-    validated = _task_output(dag_run, "validate_schema")
-    ingested = _task_output(dag_run, "ingest_data")
-    conn = db.connect()
     try:
-        db.ensure_tables(conn)
-        db.write_run_log(
-            conn, dag_run.run_id, "failed", dag_run.start_date, datetime.now(timezone.utc),
-            files_processed=len(files.raw_files(data_dir, dag_run.run_id)),
-            heals=validated.get("heals", 0),
-            rows_loaded=ingested.get("rows_loaded", 0),
-            rows_rejected=ingested.get("rows_rejected", 0),
-            failed_task=context["task_instance"].task_id,
-            error_message=str(context.get("exception"))[:1000],
-        )
+        validated = _task_output(dag_run, "validate_schema")
+        ingested = _task_output(dag_run, "ingest_data")
+        conn = db.connect()
+        try:
+            db.ensure_tables(conn)
+            db.write_run_log(
+                conn, dag_run.run_id, "failed", dag_run.start_date, datetime.now(timezone.utc),
+                files_processed=len(files.raw_files(data_dir, dag_run.run_id)),
+                heals=validated.get("heals", 0),
+                rows_loaded=ingested.get("rows_loaded", 0),
+                rows_rejected=ingested.get("rows_rejected", 0),
+                failed_task=context["task_instance"].task_id,
+                error_message=str(
+                    context.get("exception")
+                    or "task failed without an error message (killed or marked failed outside the task)"
+                )[-1000:],
+            )
+        finally:
+            conn.close()
     finally:
-        conn.close()
-    files.finish_run(data_dir, dag_run.run_id, "failed")
+        # Archive the files even if the run log could not be written.
+        files.finish_run(data_dir, dag_run.run_id, "failed")
 
 
 with DAG(
@@ -139,6 +148,10 @@ with DAG(
     validate_task = PythonOperator(task_id="validate_schema", python_callable=validate_schema)
     quality_task = PythonOperator(task_id="quality_checks", python_callable=quality_checks)
     ingest_task = PythonOperator(task_id="ingest_data", python_callable=ingest_data)
-    transform_task = PythonOperator(task_id="transform_data", python_callable=transform_data)
+    transform_task = PythonOperator(
+        task_id="transform_data",
+        python_callable=transform_data,
+        execution_timeout=timedelta(minutes=10),
+    )
 
     validate_task >> quality_task >> ingest_task >> transform_task

@@ -76,7 +76,7 @@ def test_old_database_is_upgraded(conn):
     db.ensure_tables(conn)
 
     run_id = f"test-{uuid.uuid4()}"
-    assert db.load_rows(conn, run_id, [("a.csv", ["Asha", "30", "Delhi"])], []) is True
+    assert db.load_rows(conn, run_id, [("a.csv", ["Asha", "30", "Delhi"])], []) == (1, 0, [])
     now = datetime.now(timezone.utc)
     db.write_run_log(conn, run_id, "failed", now, now, failed_task="run_dbt", error_message="boom")
     db.write_run_log(conn, run_id, "success", now, now, rows_loaded=1)
@@ -93,18 +93,29 @@ def test_old_database_is_upgraded(conn):
 def test_load_rows_saves_good_and_rejected_rows(conn, run_id):
     good = [("a.csv", ["Asha", "30", "Delhi"]), ("a.csv", ["Ravi", "41", "Pune"])]
     rejected = [Rejected("a.csv", ["", "22", "Goa"], "name is empty")]
-    assert db.load_rows(conn, run_id, good, rejected) is True
+    assert db.load_rows(conn, run_id, good, rejected) == (2, 1, [])
     assert count(conn, "raw_users", run_id) == 2
     assert count(conn, "rejected_rows", run_id) == 1
 
 
-def test_loading_the_same_run_twice_saves_rows_once(conn, run_id):
+def test_a_file_is_never_loaded_twice(conn, run_id):
     good = [("a.csv", ["Asha", "30", "Delhi"])]
     rejected = [Rejected("a.csv", ["", "22", "Goa"], "name is empty")]
-    assert db.load_rows(conn, run_id, good, rejected) is True
-    assert db.load_rows(conn, run_id, good, rejected) is False
+    assert db.load_rows(conn, run_id, good, rejected) == (1, 1, [])
+    assert db.load_rows(conn, run_id, good, rejected) == (0, 0, ["a.csv"])
     assert count(conn, "raw_users", run_id) == 1
     assert count(conn, "rejected_rows", run_id) == 1
+
+
+def test_new_files_in_a_cleared_run_are_still_loaded(conn, run_id):
+    # A successful run that is cleared in Airflow claims new files under its old run id.
+    assert db.load_rows(conn, run_id, [("a.csv", ["Asha", "30", "Delhi"])], []) == (1, 0, [])
+    good = [("a.csv", ["Asha", "30", "Delhi"]), ("b.csv", ["Ravi", "41", "Pune"])]
+    assert db.load_rows(conn, run_id, good, []) == (1, 0, ["a.csv"])
+    assert count(conn, "raw_users", run_id) == 2
+    with conn.cursor() as cur:
+        cur.execute("SELECT name FROM raw_users WHERE run_id = %s AND source_file = 'b.csv'", (run_id,))
+        assert cur.fetchall() == [("Ravi",)]
 
 
 def test_crash_halfway_saves_nothing(conn, run_id):

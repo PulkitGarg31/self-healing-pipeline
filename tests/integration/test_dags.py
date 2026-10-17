@@ -33,6 +33,12 @@ def test_every_pipeline_task_retries_twice(dagbag):
     assert all(task.retries == 2 for task in dagbag.get_dag("ingest_pipeline").tasks)
 
 
+def test_pipeline_logs_every_run(dagbag):
+    dag = dagbag.get_dag("ingest_pipeline")
+    assert dag.on_success_callback is not None
+    assert all(task.on_failure_callback is not None for task in dag.tasks)
+
+
 def test_pipeline_starts_when_new_data_lands(dagbag):
     dag = dagbag.get_dag("ingest_pipeline")
     assert type(dag.timetable).__name__ == "DatasetTriggeredTimetable"
@@ -42,3 +48,10 @@ def test_pipeline_starts_when_new_data_lands(dagbag):
 def test_supplier_marks_the_dataset_updated(dagbag):
     task = dagbag.get_dag("supplier_dag").get_task("drop_file")
     assert [outlet.uri for outlet in task.outlets] == [config.INCOMING_DATASET_URI]
+
+
+def test_pipeline_package_is_not_scanned_for_dags():
+    from pathlib import Path
+    from airflow.utils.file import list_py_file_paths
+    paths = list_py_file_paths("/opt/airflow/dags", safe_mode=False, include_examples=False)
+    assert sorted(Path(p).name for p in paths) == ["ingest_pipeline.py", "supplier_dag.py"]
