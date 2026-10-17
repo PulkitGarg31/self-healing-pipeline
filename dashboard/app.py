@@ -1,7 +1,8 @@
 """Live dashboard for the self-healing pipeline. Refreshes itself every 5 seconds."""
 import json
 import os
-from datetime import datetime
+import sys
+from datetime import datetime, timezone
 
 import pandas as pd
 import plotly.express as px
@@ -11,41 +12,61 @@ import streamlit as st
 st.set_page_config(page_title="Self-Healing Pipeline", layout="wide")
 
 METHOD_LABELS = {"rules": "Rules", "llm": "LLaMA 3.2"}
+STATUS_COLOURS = {"success": "#2e7d32", "failed": "#c62828"}
+
+
+def connect():
+    """Open a database connection. Raises KeyError if a setting is missing from the environment."""
+    return psycopg2.connect(
+        host=os.environ.get("PIPELINE_DB_HOST", "postgres"),
+        dbname=os.environ["POSTGRES_DB"],
+        user=os.environ["POSTGRES_USER"],
+        password=os.environ["POSTGRES_PASSWORD"],
+        connect_timeout=3,
+    )
+
+
+def db_error() -> str | None:
+    """Say why the database cannot be reached, or return None when a connection works."""
+    try:
+        connect().close()
+    except KeyError as exc:
+        return f"the setting {exc} is missing from the environment"
+    except psycopg2.Error as exc:
+        return str(exc).strip() or type(exc).__name__
+    return None
 
 
 def query(sql: str) -> pd.DataFrame:
     """Run a SELECT and return a DataFrame. Returns an empty one if the table does not exist yet."""
     try:
-        conn = psycopg2.connect(
-            host=os.environ.get("PIPELINE_DB_HOST", "postgres"),
-            dbname=os.environ["POSTGRES_DB"],
-            user=os.environ["POSTGRES_USER"],
-            password=os.environ["POSTGRES_PASSWORD"],
-            connect_timeout=3,
-        )
-    except (KeyError, psycopg2.Error):
+        conn = connect()
+    except (KeyError, psycopg2.Error) as exc:
+        print(f"dashboard: cannot connect to the database: {type(exc).__name__}: {exc}", file=sys.stderr)
         return pd.DataFrame()
     try:
         with conn.cursor() as cur:
             cur.execute(sql)
             columns = [d[0] for d in cur.description]
             return pd.DataFrame(cur.fetchall(), columns=columns)
-    except psycopg2.Error:
+    except psycopg2.Error as exc:
+        print(f"dashboard: query failed: {type(exc).__name__}: {exc}", file=sys.stderr)
         return pd.DataFrame()
     finally:
         conn.close()
 
 
 def show_json(value):
-    """Show a JSON object or list as a tree; anything else (a plain string, a number) as text."""
+    """Show a JSON object or list as a tree, and anything else (a JSON string, a number) as text."""
     try:
         parsed = json.loads(value)
     except (TypeError, ValueError):
-        parsed = None
+        st.code(str(value))
+        return
     if isinstance(parsed, (dict, list)):
         st.json(parsed)
     else:
-        st.code(str(value))
+        st.code(parsed if isinstance(parsed, str) else str(value))
 
 
 st.title("Self-Healing Pipeline Dashboard")
@@ -53,6 +74,14 @@ st.title("Self-Healing Pipeline Dashboard")
 
 @st.fragment(run_every=5)
 def live_view():
+    st.caption(f"Updated at {datetime.now(timezone.utc):%H:%M:%S} UTC. "
+               "Refreshes every 5 seconds. Times are UTC.")
+
+    error = db_error()
+    if error:
+        st.warning(f"Cannot reach the database: {error}")
+        return
+
     runs = query("""
         SELECT run_id, status, started_at, finished_at, files_processed, rows_loaded,
                rows_rejected, heals, failed_task, error_message
@@ -72,8 +101,6 @@ def live_view():
         FROM rejected_rows ORDER BY rejected_at DESC LIMIT 50""")
     cities = query("SELECT city, total_users, avg_age FROM city_summary ORDER BY total_users DESC")
 
-    st.caption(f"Updated at {datetime.now():%H:%M:%S}. Refreshes every 5 seconds. Times are UTC.")
-
     if runs.empty:
         st.info("No pipeline runs yet. The supplier drops a file every 2 minutes, "
                 "or trigger supplier_dag in Airflow.")
@@ -89,14 +116,18 @@ def live_view():
     cols[1].metric("Runs", len(finished))
     cols[2].metric("Rows loaded", int(runs["rows_loaded"].fillna(0).sum()))
     cols[3].metric("Rows rejected", int(runs["rows_rejected"].fillna(0).sum()))
-    cols[4].metric("Files repaired", len(repairs))
+    cols[4].metric("Files repaired", fixed)
     cols[5].metric("Repair success", repair_rate)
-    st.caption(f"Last run started {last['started_at']}")
+    if pd.notna(last["started_at"]):
+        st.caption(f"Last run started {last['started_at']:%Y-%m-%d %H:%M:%S}")
 
     st.subheader("Runs")
-    if not finished.empty:
-        chart = px.bar(finished.sort_values("started_at"), x="started_at", y="rows_loaded", color="status",
-                       labels={"started_at": "Run started", "rows_loaded": "Rows loaded"})
+    if finished.empty:
+        st.info("No finished runs yet.")
+    else:
+        chart = px.scatter(finished.sort_values("started_at"), x="started_at", y="rows_loaded", color="status",
+                           color_discrete_map=STATUS_COLOURS, hover_data=["run_id", "failed_task"],
+                           labels={"started_at": "Run started", "rows_loaded": "Rows loaded"})
         st.plotly_chart(chart, use_container_width=True)
 
     st.subheader("Failed runs")
@@ -117,9 +148,13 @@ def live_view():
         left.bar_chart(repairs["method"].map(METHOD_LABELS).fillna("Not repaired").value_counts())
         with right:
             for _, row in repairs.head(20).iterrows():
-                outcome = "Fixed" if row["success"] else "Failed"
-                method = METHOD_LABELS.get(row["method"], "no method")
-                with st.expander(f"{outcome} by {method}: {row['source_file']} ({row['drift_type']})"):
+                method = METHOD_LABELS.get(row["method"])
+                if method is None:
+                    title = f"Not repaired: {row['source_file']} ({row['drift_type']})"
+                else:
+                    outcome = "Fixed" if row["success"] else "Failed"
+                    title = f"{outcome} by {method}: {row['source_file']} ({row['drift_type']})"
+                with st.expander(title):
                     if row["mapping"]:
                         st.write("Column mapping:")
                         show_json(row["mapping"])
