@@ -12,12 +12,14 @@ from pathlib import Path
 RECENT_FILES = 15
 
 # One row per file: its latest repair attempt, how many rows were saved or set aside, and when it
-# was first seen. A retry repairs the same file again, so only the latest attempt counts.
+# was first seen. A retry repairs the same file again, so only the latest attempt counts, but the
+# first attempt's time is kept as the time the file was seen.
 RECENT_FILES_SQL = f"""
 WITH heal AS (
     SELECT DISTINCT ON (run_id, source_file)
            run_id, source_file, healed_at, drift_type, method, mapping, llm_diagnosis,
-           success, error_message
+           success, error_message,
+           MIN(healed_at) OVER (PARTITION BY run_id, source_file) AS first_healed_at
     FROM healing_log WHERE drift_type IS NOT NULL
     ORDER BY run_id, source_file, healed_at DESC
 ),
@@ -36,7 +38,7 @@ files AS (
 )
 SELECT f.run_id, f.source_file,
        COALESCE(l.n, 0) AS rows_loaded, COALESCE(a.n, 0) AS rows_set_aside,
-       LEAST(h.healed_at, l.first_at, a.first_at) AS seen_at,
+       LEAST(h.first_healed_at, l.first_at, a.first_at) AS seen_at,
        h.drift_type, h.method, h.mapping, h.llm_diagnosis, h.success, h.error_message
 FROM files f
 LEFT JOIN heal h ON h.run_id = f.run_id AND h.source_file = f.source_file
@@ -62,7 +64,7 @@ SELECT
     (SELECT COUNT(*) FROM heal h WHERE NOT h.success AND NOT EXISTS (
         SELECT 1 FROM saved s WHERE s.run_id = h.run_id AND s.source_file = h.source_file)) AS could_not_repair,
     (SELECT COUNT(*) FROM raw_users WHERE run_id IS NOT NULL) AS rows_loaded,
-    (SELECT COUNT(*) FROM rejected_rows) AS rows_set_aside,
+    (SELECT COUNT(*) FROM rejected_rows WHERE run_id IS NOT NULL) AS rows_set_aside,
     (SELECT COUNT(*) FROM heal WHERE success AND method = 'rules') AS fixed_by_rules,
     (SELECT COUNT(*) FROM heal WHERE success AND method = 'llm') AS fixed_by_ai
 """
@@ -151,6 +153,8 @@ def result(story: FileStory) -> tuple[str, str]:
         if story.rows_loaded or story.rows_set_aside:
             return "Fixed by hand", "ok"
         return "Could not repair", "bad"
+    if story.repaired_ok and not (story.rows_loaded or story.rows_set_aside):
+        return "Repaired, not loaded", "warn"
     if story.method == "llm":
         return "Fixed by AI", "ai"
     if story.method == "rules":
@@ -208,14 +212,21 @@ def time_ago(when: datetime | None, now: datetime | None = None) -> str:
 
 
 def friendly_error(message: str | None) -> str:
-    """The reason in plain words: drops the 'Could not repair: file (' wrapper and Python error names."""
+    """The reason in plain words: drops the 'Could not repair: file (' wrapper and Python error names.
+
+    A run with several failed files gives one reason per file, joined with '; '.
+    """
     if not message:
         return "No reason was recorded."
     text = message.strip()
-    inner = re.search(r"\(\w+(?:Error|Exception): (.*)\)\s*$", text, re.S)
-    if inner:
-        text = inner.group(1)
-    text = re.sub(r"^\w+(?:Error|Exception): ", "", text)
+    parts = re.findall(r"\(\w+(?:Error|Exception): (.*?)\)(?=; |\s*$)", text, re.S)
+    if parts:
+        text = "; ".join(parts)
+    else:
+        wrapper = re.match(r"^Could not repair: [^(]+\((.*)\)\s*$", text, re.S)
+        if wrapper:
+            text = wrapper.group(1)
+        text = re.sub(r"^\w+(?:Error|Exception): ", "", text)
     return text[:300]
 
 
@@ -299,3 +310,29 @@ def repaired_rows(folder: Path, source_file: str, max_rows: int = 3) -> list[lis
     except (OSError, csv.Error):
         return []
     return rows[: max_rows + 1]
+
+
+def after_rows(folder: Path, source_file: str, max_rows: int = 3) -> tuple[str, list[list[str]]]:
+    """(caption, header plus rows) for the right side of the file story.
+
+    good.csv holds what was actually loaded, so use it when the run got that far. Otherwise show the
+    repaired file and say it was not loaded.
+    """
+    good = folder / "good.csv"
+    if good.is_file():
+        rows = []
+        try:
+            with open(good, newline="", encoding="utf-8") as f:
+                reader = csv.reader(f)
+                next(reader, None)  # header: source_file, name, age, city
+                for row in reader:
+                    if row and row[0] == source_file:
+                        rows.append(row[1:4])
+                        if len(rows) == max_rows:
+                            break
+        except (OSError, csv.Error):
+            rows = []
+        return "What was loaded", ([["name", "age", "city"], *rows] if rows else [])
+    if (folder / "valid" / source_file).is_file():
+        return "After repair (not loaded)", repaired_rows(folder, source_file, max_rows)
+    return "After repair", []

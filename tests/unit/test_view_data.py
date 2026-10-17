@@ -51,6 +51,10 @@ def test_what_arrived(drift, aside, expected):
      ("Could not repair", "bad")),
     ({"drift_type": "missing columns: name", "method": "llm", "repaired_ok": False, "rows_loaded": 2},
      ("Fixed by hand", "ok")),
+    ({"drift_type": "column order: city, name, age", "method": "rules", "repaired_ok": True, "rows_loaded": 0},
+     ("Repaired, not loaded", "warn")),
+    ({"drift_type": "missing columns: name", "method": "llm", "repaired_ok": True, "rows_loaded": 0},
+     ("Repaired, not loaded", "warn")),
 ])
 def test_result(overrides, expected):
     assert view_data.result(story(**overrides)) == expected
@@ -86,6 +90,9 @@ def test_time_ago_without_a_time():
     ("RuntimeError: dbt failed", "dbt failed"),
     ("task failed without an error message (killed or marked failed outside the task)",
      "task failed without an error message (killed or marked failed outside the task)"),
+    ("Could not repair: a.csv (ValueError: x); b.csv (ValueError: y)", "x; y"),
+    ("Could not repair: d.csv (the file repeats a column name, so it is not clear which one to use)",
+     "the file repeats a column name, so it is not clear which one to use"),
 ])
 def test_friendly_error(message, expected):
     assert view_data.friendly_error(message) == expected
@@ -185,6 +192,32 @@ def test_repaired_rows_of_a_missing_file(tmp_path):
     assert view_data.repaired_rows(folder, "a.csv") == []
 
 
+def test_after_rows_shows_only_this_files_loaded_rows(tmp_path):
+    folder = make_run(tmp_path, "processed", "r", "a.csv", valid="name,age,city\nV,9,V\n")
+    (folder / "good.csv").write_text(
+        "source_file,name,age,city\na.csv,A,1,X\nb.csv,Q,9,Q\na.csv,B,2,Y\na.csv,C,3,Z\nb.csv,R,8,R\na.csv,D,4,W\n",
+        encoding="utf-8")
+    assert view_data.after_rows(folder, "a.csv") == ("What was loaded", [
+        ["name", "age", "city"], ["A", "1", "X"], ["B", "2", "Y"], ["C", "3", "Z"]])
+
+
+def test_after_rows_when_no_rows_of_this_file_were_loaded(tmp_path):
+    folder = make_run(tmp_path, "processed", "r", "a.csv", valid="name,age,city\nV,9,V\n")
+    (folder / "good.csv").write_text("source_file,name,age,city\nb.csv,Q,9,Q\n", encoding="utf-8")
+    assert view_data.after_rows(folder, "a.csv") == ("What was loaded", [])
+
+
+def test_after_rows_falls_back_to_the_repaired_file(tmp_path):
+    folder = make_run(tmp_path, "failed", "r", "a.csv", valid="name,age,city\nA,1,X\n")
+    assert view_data.after_rows(folder, "a.csv") == (
+        "After repair (not loaded)", [["name", "age", "city"], ["A", "1", "X"]])
+
+
+def test_after_rows_with_nothing_to_show(tmp_path):
+    folder = make_run(tmp_path, "failed", "r", "a.csv")
+    assert view_data.after_rows(folder, "a.csv") == ("After repair", [])
+
+
 def test_journey_for_a_clean_file():
     assert view_data.journey(story(), NOW) == [
         ("Received", "30 seconds ago"),
@@ -229,3 +262,8 @@ def test_sql_mentions_only_existing_columns():
                 view_data.REJECTED_SQL, view_data.CITY_SQL):
         assert "SELECT" in sql
     assert "LIMIT 15" in view_data.RECENT_FILES_SQL
+
+
+def test_sql_uses_first_sight_and_pipeline_rows_only():
+    assert "LEAST(h.first_healed_at, l.first_at, a.first_at) AS seen_at" in view_data.RECENT_FILES_SQL
+    assert "FROM rejected_rows WHERE run_id IS NOT NULL) AS rows_set_aside" in view_data.HEALTH_SQL
