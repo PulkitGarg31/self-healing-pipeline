@@ -3,8 +3,8 @@ services:
     image: postgres:15
     restart: unless-stopped
     env_file: .env
-    ports:
-      - "127.0.0.1:5432:5432"
+    # No published port: Airflow and the dashboard reach it inside Docker, and a local
+    # PostgreSQL on the host often already uses 5432. Use `docker compose exec postgres psql`.
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
