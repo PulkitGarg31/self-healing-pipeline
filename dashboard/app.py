@@ -21,8 +21,9 @@ def query(sql: str) -> pd.DataFrame:
             dbname=os.environ["POSTGRES_DB"],
             user=os.environ["POSTGRES_USER"],
             password=os.environ["POSTGRES_PASSWORD"],
+            connect_timeout=3,
         )
-    except psycopg2.Error:
+    except (KeyError, psycopg2.Error):
         return pd.DataFrame()
     try:
         with conn.cursor() as cur:
@@ -36,10 +37,15 @@ def query(sql: str) -> pd.DataFrame:
 
 
 def show_json(value):
+    """Show a JSON object or list as a tree; anything else (a plain string, a number) as text."""
     try:
-        st.json(json.loads(value))
+        parsed = json.loads(value)
     except (TypeError, ValueError):
-        st.write(value)
+        parsed = None
+    if isinstance(parsed, (dict, list)):
+        st.json(parsed)
+    else:
+        st.code(str(value))
 
 
 st.title("Self-Healing Pipeline Dashboard")
@@ -50,7 +56,7 @@ def live_view():
     runs = query("""
         SELECT run_id, status, started_at, finished_at, files_processed, rows_loaded,
                rows_rejected, heals, failed_task, error_message
-        FROM pipeline_run_log WHERE run_id IS NOT NULL ORDER BY started_at DESC""")
+        FROM pipeline_run_log WHERE run_id IS NOT NULL ORDER BY started_at DESC NULLS LAST""")
     # A retry repairs the same file again, so keep only the latest attempt for each file.
     repairs = query("""
         SELECT * FROM (
