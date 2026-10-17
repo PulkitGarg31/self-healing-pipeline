@@ -87,7 +87,7 @@ _NEXT_FILE = re.compile(r"\); (?=[^();]+ \()")
 
 # The requests library's words when Ollama is down, slow or unreachable.
 _OLLAMA_DOWN = re.compile(
-    r"HTTPConnectionPool|Max retries exceeded|Read timed out|Connection refused|NewConnectionError")
+    r"HTTPConnectionPool|Max retries exceeded|Read timed out|NewConnectionError")
 OLLAMA_DOWN = "LLaMA 3.2 (Ollama) did not answer. Is Ollama running?"
 
 TASK_LABELS = {

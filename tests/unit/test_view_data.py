@@ -139,11 +139,16 @@ def test_friendly_error_when_ollama_does_not_answer(message, expected):
 
 
 @pytest.mark.parametrize("words", [
-    "HTTPConnectionPool(host='x', port=1)", "Max retries exceeded", "Read timed out", "Connection refused",
+    "HTTPConnectionPool(host='x', port=1)", "Max retries exceeded", "Read timed out",
     "NewConnectionError('x')",
 ])
 def test_each_ollama_outage_phrase_is_explained(words):
     assert view_data.friendly_error(f"Could not repair: f.csv (RuntimeError: {words})") == OLLAMA_DOWN
+
+
+def test_a_database_connection_refusal_is_not_blamed_on_ollama():
+    message = "OperationalError: connection to server at \"postgres\" failed: Connection refused"
+    assert view_data.friendly_error(message) != OLLAMA_DOWN
 
 
 @pytest.mark.parametrize("task, expected", [
