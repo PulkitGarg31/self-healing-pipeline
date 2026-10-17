@@ -1,125 +1,141 @@
-import streamlit as st
-import psycopg2
-import pandas as pd
-import plotly.express as px
+"""Live dashboard for the self-healing pipeline. Refreshes itself every 5 seconds."""
 import json
+import os
 from datetime import datetime
 
-DB_CONN = {
-    "host": "postgres",
-    "database": "airflow",
-    "user": "airflow",
-    "password": "airflow"
-}
+import pandas as pd
+import plotly.express as px
+import psycopg2
+import streamlit as st
 
-def get_conn():
-    return psycopg2.connect(**DB_CONN)
+st.set_page_config(page_title="Self-Healing Pipeline", layout="wide")
 
-def safe_query(sql):
+METHOD_LABELS = {"rules": "Rules", "llm": "LLaMA 3.2"}
+
+
+def query(sql: str) -> pd.DataFrame:
+    """Run a SELECT and return a DataFrame. Returns an empty one if the table does not exist yet."""
     try:
-        conn = get_conn()
-        cur = conn.cursor()
-        cur.execute(sql)
-        cols = [desc[0] for desc in cur.description]
-        rows = cur.fetchall()
-        conn.close()
-        return pd.DataFrame(rows, columns=cols)
-    except Exception:
+        conn = psycopg2.connect(
+            host=os.environ.get("PIPELINE_DB_HOST", "postgres"),
+            dbname=os.environ["POSTGRES_DB"],
+            user=os.environ["POSTGRES_USER"],
+            password=os.environ["POSTGRES_PASSWORD"],
+        )
+    except psycopg2.Error:
         return pd.DataFrame()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql)
+            columns = [d[0] for d in cur.description]
+            return pd.DataFrame(cur.fetchall(), columns=columns)
+    except psycopg2.Error:
+        return pd.DataFrame()
+    finally:
+        conn.close()
 
-def get_healing_log():
-    return safe_query("SELECT * FROM healing_log ORDER BY healed_at DESC")
 
-def get_run_log():
-    return safe_query("SELECT * FROM pipeline_run_log ORDER BY run_time DESC")
+def show_json(value):
+    try:
+        st.json(json.loads(value))
+    except (TypeError, ValueError):
+        st.write(value)
 
-def get_raw_users():
-    return safe_query("SELECT * FROM raw_users ORDER BY ingested_at DESC LIMIT 20")
 
-def get_city_summary():
-    return safe_query("SELECT * FROM city_summary")
-
-# --- PAGE CONFIG ---
-st.set_page_config(page_title="Pipeline Dashboard", layout="wide")
 st.title("Self-Healing Pipeline Dashboard")
-st.caption(f"Last refreshed: {datetime.now().strftime('%H:%M:%S')}")
 
-st.button("Refresh")
 
-# --- LOAD DATA ---
-healing_df = get_healing_log()
-run_df = get_run_log()
+@st.fragment(run_every=5)
+def live_view():
+    runs = query("""
+        SELECT run_id, status, started_at, finished_at, files_processed, rows_loaded,
+               rows_rejected, heals, failed_task, error_message
+        FROM pipeline_run_log WHERE run_id IS NOT NULL ORDER BY started_at DESC""")
+    # A retry repairs the same file again, so keep only the latest attempt for each file.
+    repairs = query("""
+        SELECT * FROM (
+            SELECT DISTINCT ON (run_id, source_file)
+                   healed_at, run_id, source_file, drift_type, method, mapping, llm_diagnosis,
+                   success, error_message
+            FROM healing_log WHERE drift_type IS NOT NULL
+            ORDER BY run_id, source_file, healed_at DESC
+        ) latest ORDER BY healed_at DESC""")
+    attempts = query("SELECT COUNT(*) AS n FROM healing_log WHERE drift_type IS NOT NULL")
+    rejected = query("""
+        SELECT rejected_at, source_file, row_data, reason
+        FROM rejected_rows ORDER BY rejected_at DESC LIMIT 50""")
+    cities = query("SELECT city, total_users, avg_age FROM city_summary ORDER BY total_users DESC")
 
-# --- TOP METRICS ---
-total_heals = len(healing_df)
-successful_heals = len(healing_df[healing_df["success"] == True]) if not healing_df.empty else 0
-heal_rate = round((successful_heals / total_heals * 100), 1) if total_heals > 0 else 0
-total_runs = len(run_df)
-total_rows = int(run_df["rows_processed"].sum()) if not run_df.empty else 0
+    st.caption(f"Updated at {datetime.now():%H:%M:%S}. Refreshes every 5 seconds. Times are UTC.")
 
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("Total Pipeline Runs", total_runs)
-col2.metric("Total Rows Ingested", total_rows)
-col3.metric("AI Interventions", total_heals)
-col4.metric("Heal Success Rate", f"{heal_rate}%")
+    if runs.empty:
+        st.info("No pipeline runs yet. The supplier drops a file every 2 minutes, "
+                "or trigger supplier_dag in Airflow.")
+        return
 
-st.divider()
+    last = runs.iloc[0]
+    finished = runs[runs["status"] != "no_data"]
+    fixed = int(repairs["success"].sum()) if not repairs.empty else 0
+    repair_rate = f"{fixed / len(repairs) * 100:.0f}%" if len(repairs) else "n/a"
 
-# --- HEALING LOG ---
-st.subheader("AI Intervention Log")
-if healing_df.empty:
-    st.info("No interventions yet — trigger the DAG to see healing in action.")
-else:
-    for _, row in healing_df.iterrows():
-        try:
-            diagnosis = json.loads(row["llm_diagnosis"]) if isinstance(row["llm_diagnosis"], str) else row["llm_diagnosis"]
-        except:
-            diagnosis = row["llm_diagnosis"]
-        status = "✅" if row["success"] else "❌"
-        with st.expander(f"{status} {row['healed_at']} — {str(row['error_message'])[:60]}"):
-            st.write("**Error:**", row["error_message"])
-            st.write("**LLM Diagnosis:**")
-            st.json(diagnosis)
-            st.write("**Outcome:**", "Success" if row["success"] else "Failed")
+    cols = st.columns(6)
+    cols[0].metric("Last run", str(last["status"]))
+    cols[1].metric("Runs", len(finished))
+    cols[2].metric("Rows loaded", int(runs["rows_loaded"].fillna(0).sum()))
+    cols[3].metric("Rows rejected", int(runs["rows_rejected"].fillna(0).sum()))
+    cols[4].metric("Files repaired", len(repairs))
+    cols[5].metric("Repair success", repair_rate)
+    st.caption(f"Last run started {last['started_at']}")
 
-st.divider()
+    st.subheader("Runs")
+    if not finished.empty:
+        chart = px.bar(finished.sort_values("started_at"), x="started_at", y="rows_loaded", color="status",
+                       labels={"started_at": "Run started", "rows_loaded": "Rows loaded"})
+        st.plotly_chart(chart, use_container_width=True)
 
-# --- CHARTS ---
-col1, col2 = st.columns(2)
-
-with col1:
-    st.subheader("Rows Ingested Over Time")
-    if not run_df.empty:
-        fig = px.bar(run_df, x="run_time", y="rows_processed",
-                     labels={"run_time": "Run Time", "rows_processed": "Rows"})
-        st.plotly_chart(fig, use_container_width=True)
+    st.subheader("Failed runs")
+    failed = runs[runs["status"] == "failed"]
+    if failed.empty:
+        st.success("No failed runs.")
     else:
-        st.info("No run data yet.")
+        st.dataframe(failed[["started_at", "run_id", "failed_task", "error_message"]],
+                     use_container_width=True, hide_index=True)
 
-with col2:
-    st.subheader("Users by City")
-    city_df = get_city_summary()
-    if not city_df.empty:
-        fig = px.pie(city_df, names="city", values="total_users")
-        st.plotly_chart(fig, use_container_width=True)
+    st.subheader("Repairs")
+    if repairs.empty:
+        st.info("No repairs yet.")
     else:
-        st.info("No city data yet.")
+        total_attempts = int(attempts["n"].iloc[0]) if not attempts.empty else len(repairs)
+        st.caption(f"Latest attempt for each file. {total_attempts} attempts in total, including retries.")
+        left, right = st.columns([1, 2])
+        left.bar_chart(repairs["method"].map(METHOD_LABELS).fillna("Not repaired").value_counts())
+        with right:
+            for _, row in repairs.head(20).iterrows():
+                outcome = "Fixed" if row["success"] else "Failed"
+                method = METHOD_LABELS.get(row["method"], "no method")
+                with st.expander(f"{outcome} by {method}: {row['source_file']} ({row['drift_type']})"):
+                    if row["mapping"]:
+                        st.write("Column mapping:")
+                        show_json(row["mapping"])
+                    if row["llm_diagnosis"]:
+                        st.write("AI answer:")
+                        show_json(row["llm_diagnosis"])
+                    if row["error_message"]:
+                        st.error(row["error_message"])
 
-st.divider()
+    left, right = st.columns(2)
+    with left:
+        st.subheader("Rejected rows")
+        if rejected.empty:
+            st.info("No rejected rows.")
+        else:
+            st.dataframe(rejected, use_container_width=True, hide_index=True)
+    with right:
+        st.subheader("Users by city")
+        if cities.empty:
+            st.info("No city data yet.")
+        else:
+            st.plotly_chart(px.pie(cities, names="city", values="total_users"), use_container_width=True)
 
-# --- RECENT DATA ---
-st.subheader("Recently Ingested Records")
-users_df = get_raw_users()
-if not users_df.empty:
-    st.dataframe(users_df, use_container_width=True)
-else:
-    st.info("No data yet.")
 
-st.divider()
-
-# --- RUN LOG ---
-st.subheader("Pipeline Run Log")
-if not run_df.empty:
-    st.dataframe(run_df, use_container_width=True)
-else:
-    st.info("No runs yet.")
+live_view()
