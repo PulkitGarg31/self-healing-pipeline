@@ -18,7 +18,7 @@ def dagbag():
 
 def test_dags_load_without_errors(dagbag):
     assert dagbag.import_errors == {}
-    assert set(dagbag.dag_ids) == {"supplier_dag", "ingest_pipeline"}
+    assert set(dagbag.dag_ids) == {"supplier_dag", "supplier_on_demand", "ingest_pipeline"}
 
 
 def test_pipeline_has_four_tasks_linked_in_order(dagbag):
@@ -45,9 +45,14 @@ def test_pipeline_starts_when_new_data_lands(dagbag):
     assert config.INCOMING_DATASET_URI in repr(dag.dataset_triggers)
 
 
-def test_supplier_marks_the_dataset_updated(dagbag):
-    task = dagbag.get_dag("supplier_dag").get_task("drop_file")
-    assert [outlet.uri for outlet in task.outlets] == [config.INCOMING_DATASET_URI]
+def test_suppliers_mark_the_dataset_updated(dagbag):
+    for dag_id in ("supplier_dag", "supplier_on_demand"):
+        task = dagbag.get_dag(dag_id).get_task("drop_file")
+        assert [outlet.uri for outlet in task.outlets] == [config.INCOMING_DATASET_URI]
+
+
+def test_on_demand_supplier_only_runs_when_asked(dagbag):
+    assert type(dagbag.get_dag("supplier_on_demand").timetable).__name__ == "NullTimetable"
 
 
 def test_pipeline_package_is_not_scanned_for_dags():
