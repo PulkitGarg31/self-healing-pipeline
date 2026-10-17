@@ -53,12 +53,14 @@ def ingest_data(run_id, **_):
     conn = db.connect()
     try:
         db.ensure_tables(conn)
-        saved, saved_rejected, skipped = db.load_rows(conn, run_id, good, rejected)
+        _, _, skipped = db.load_rows(conn, run_id, good, rejected)
+        # Report everything this run has in the database, so a re-run never logs fewer rows.
+        total_good, total_rejected = db.run_totals(conn, run_id)
     finally:
         conn.close()
     if skipped:
         print("Already loaded, so not saved again: " + ", ".join(skipped))
-    return {"rows_loaded": saved, "rows_rejected": saved_rejected, "files_skipped": skipped}
+    return {"rows_loaded": total_good, "rows_rejected": total_rejected, "files_skipped": skipped}
 
 
 def transform_data(**_):

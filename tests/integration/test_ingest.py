@@ -118,6 +118,24 @@ def test_new_files_in_a_cleared_run_are_still_loaded(conn, run_id):
         assert cur.fetchall() == [("Ravi",)]
 
 
+def test_loading_nothing_works(conn, run_id):
+    assert db.load_rows(conn, run_id, [], []) == (0, 0, [])
+
+
+def test_a_file_with_only_rejected_rows_is_never_loaded_twice(conn, run_id):
+    rejected = [Rejected("r.csv", ["", "1", "x"], "name is empty")]
+    assert db.load_rows(conn, run_id, [], rejected) == (0, 1, [])
+    assert db.load_rows(conn, run_id, [], rejected) == (0, 0, ["r.csv"])
+    assert count(conn, "rejected_rows", run_id) == 1
+
+
+def test_run_totals_counts_every_row_of_the_run(conn, run_id):
+    good = [("a.csv", ["Asha", "30", "Delhi"]), ("a.csv", ["Ravi", "41", "Pune"])]
+    rejected = [Rejected("a.csv", ["", "22", "Goa"], "name is empty")]
+    db.load_rows(conn, run_id, good, rejected)
+    assert db.run_totals(conn, run_id) == (2, 1)
+
+
 def test_crash_halfway_saves_nothing(conn, run_id):
     good = [("a.csv", ["Asha", "30", "Delhi"]), ("a.csv", ["Ravi", "not-a-number", "Pune"])]
     with pytest.raises(ValueError):
@@ -132,6 +150,17 @@ def test_run_log_keeps_one_row_per_run(conn, run_id):
     with conn.cursor() as cur:
         cur.execute("SELECT status, rows_loaded, failed_task FROM pipeline_run_log WHERE run_id = %s", (run_id,))
         assert cur.fetchall() == [("success", 3, None)]
+
+
+def test_a_success_row_is_never_replaced_by_no_data(conn, run_id):
+    # A successful run that is cleared and then finds no new files must keep its success row.
+    now = datetime.now(timezone.utc)
+    db.write_run_log(conn, run_id, "success", now, now, files_processed=1, rows_loaded=3, rows_rejected=1, heals=1)
+    db.write_run_log(conn, run_id, "no_data", now, now)
+    with conn.cursor() as cur:
+        cur.execute("""SELECT status, files_processed, rows_loaded, rows_rejected, heals
+                       FROM pipeline_run_log WHERE run_id = %s""", (run_id,))
+        assert cur.fetchall() == [("success", 1, 3, 1, 1)]
 
 
 def test_log_heal_saves_any_ai_answer(conn, run_id):

@@ -131,10 +131,24 @@ def load_rows(conn, run_id: str, good, rejected) -> tuple[int, int, list[str]]:
         raise
 
 
+def run_totals(conn, run_id: str) -> tuple[int, int]:
+    """How many good and rejected rows this run has in the database."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT COUNT(*) FROM raw_users WHERE run_id = %s", (run_id,))
+        good = cur.fetchone()[0]
+        cur.execute("SELECT COUNT(*) FROM rejected_rows WHERE run_id = %s", (run_id,))
+        rejected = cur.fetchone()[0]
+    conn.commit()
+    return good, rejected
+
+
 def write_run_log(conn, run_id: str, status: str, started_at: datetime | None, finished_at: datetime,
                   files_processed: int = 0, rows_loaded: int = 0, rows_rejected: int = 0, heals: int = 0,
                   failed_task: str | None = None, error_message: str | None = None) -> None:
-    """Save one row per pipeline run. Writing the same run again updates its row."""
+    """Save one row per pipeline run. Writing the same run again updates its row.
+
+    A success row is never replaced by no_data (a cleared run that found no new files).
+    """
     with conn.cursor() as cur:
         cur.execute(
             """INSERT INTO pipeline_run_log
@@ -150,7 +164,8 @@ def write_run_log(conn, run_id: str, status: str, started_at: datetime | None, f
                    rows_rejected = EXCLUDED.rows_rejected,
                    heals = EXCLUDED.heals,
                    failed_task = EXCLUDED.failed_task,
-                   error_message = EXCLUDED.error_message""",
+                   error_message = EXCLUDED.error_message
+               WHERE NOT (pipeline_run_log.status = 'success' AND EXCLUDED.status = 'no_data')""",
             (run_id, status, started_at, finished_at, files_processed, rows_loaded,
              rows_rejected, heals, _text(failed_task), _text(error_message)),
         )
