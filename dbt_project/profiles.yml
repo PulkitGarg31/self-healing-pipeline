@@ -3,9 +3,9 @@ pipeline:
   outputs:
     dev:
       type: postgres
-      host: postgres
-      user: airflow
-      password: airflow
+      host: "{{ env_var('PIPELINE_DB_HOST', 'postgres') }}"
+      user: "{{ env_var('POSTGRES_USER') }}"
+      password: "{{ env_var('POSTGRES_PASSWORD') }}"
       port: 5432
-      dbname: airflow
+      dbname: "{{ env_var('POSTGRES_DB') }}"
       schema: public
